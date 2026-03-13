@@ -3,90 +3,513 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Seguridad Barrial Application</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <title>Seguridad Barrial - Duitama</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background-color: #2E2E2E;
-            color: #FFCCCB;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a1a;
+            color: #fff;
         }
+
+        header {
+            background: linear-gradient(135deg, #000 0%, #1a0000 100%);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 4px solid #cc0000;
+            box-shadow: 0 4px 8px rgba(204, 0, 0, 0.3);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            color: #ff4444;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            letter-spacing: 2px;
+        }
+
+        .container {
+            display: flex;
+            gap: 0;
+        }
+
+        .map-section {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+        }
+
         #map {
-            height: 400px;
             width: 100%;
-            border: 2px solid #FFCCCB;
+            height: 50vh;
+            border-right: 4px solid #cc0000;
         }
+
+        .coordinates {
+            background-color: #0a0a0a;
+            padding: 15px;
+            border-right: 4px solid #cc0000;
+            color: #ff6666;
+            font-weight: bold;
+            text-align: center;
+            border-bottom: 2px solid #cc0000;
+        }
+
+        .form-section {
+            width: 50%;
+            padding: 30px;
+            overflow-y: auto;
+            background-color: #1a1a1a;
+            max-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-container h2 {
+            color: #ff4444;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+            border-bottom: 2px solid #cc0000;
+            padding-bottom: 10px;
+        }
+
         .form-group {
-            margin: 20px 0;
+            margin-bottom: 20px;
         }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ff6666;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #cc0000;
+            background-color: #2a2a2a;
+            color: #fff;
+            border-radius: 4px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #ff4444;
+            background-color: #333;
+            box-shadow: 0 0 10px rgba(204, 0, 0, 0.5);
+        }
+
+        select option {
+            background-color: #2a2a2a;
+            color: #fff;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
         button {
-            background-color: #FF5733;
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #cc0000 0%, #990000 100%);
+            color: #fff;
             border: none;
-            color: white;
-            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 1.1em;
+            font-weight: bold;
             cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 8px rgba(204, 0, 0, 0.4);
         }
+
         button:hover {
-            background-color: #C70039;
+            background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+            box-shadow: 0 6px 12px rgba(204, 0, 0, 0.6);
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(204, 0, 0, 0.4);
+        }
+
+        .success-message {
+            display: none;
+            background-color: #1a4d1a;
+            border-left: 4px solid #00cc00;
+            color: #00ff00;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .error-message {
+            display: none;
+            background-color: #4d0000;
+            border-left: 4px solid #ff0000;
+            color: #ff6666;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .reports-list {
+            margin-top: 30px;
+        }
+
+        .reports-list h3 {
+            color: #ff4444;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #cc0000;
+            padding-bottom: 10px;
+        }
+
+        .report-card {
+            background-color: #2a2a2a;
+            border-left: 4px solid #cc0000;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            box-shadow: 0 4px 8px rgba(204, 0, 0, 0.3);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .report-card h4 {
+            color: #ff6666;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .report-field {
+            color: #ccc;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .report-field strong {
+            color: #ff4444;
+        }
+
+        .report-timestamp {
+            color: #999;
+            font-size: 0.85em;
+            margin-top: 10px;
+            border-top: 1px solid #444;
+            padding-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .map-section {
+                width: 100%;
+            }
+
+            #map {
+                height: 400px;
+                border-right: none;
+                border-bottom: 4px solid #cc0000;
+            }
+
+            .form-section {
+                width: 100%;
+                max-height: none;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>Seguridad Barrial</h1>
-    <div id="map"></div>
-    <p id="coordinates">Coordinates: </p>
-    <form id="reportForm">
-        <div class="form-group">
-            <label for="problemType">Tipo de Problema:</label>
-            <input type="text" id="problemType" required>
-        </div>
-        <div class="form-group">
-            <label for="frequency">Frecuencia:</label>
-            <input type="number" id="frequency" min="1" required>
-        </div>
-        <div class="form-group">
-            <label for="description">Descripción:</label>
-            <textarea id="description" required></textarea>
-        </div>
-        <button type="submit">Reportar</button>
-    </form>
-    <div id="reportCards"></div>
+    <header>
+        <h1>🚨 SEGURIDAD BARRIAL - DUITAMA 🚨</h1>
+    </header>
 
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <div class="container">
+        <!-- Sección del mapa -->
+        <div class="map-section">
+            <div id="map"></div>
+            <div class="coordinates">
+                <span id="coordinatesText">Ubicación del reporte: 5.8268, -73.0333</span>
+            </div>
+        </div>
+
+        <!-- Sección del formulario -->
+        <div class="form-section">
+            <h2>Reportar Incidente</h2>
+            
+            <div id="successMessage" class="success-message">
+                ✓ Reporte enviado exitosamente
+            </div>
+
+            <div id="errorMessage" class="error-message">
+                ✗ Error al enviar el reporte. Intenta nuevamente
+            </div>
+
+            <form id="reportForm">
+                <div class="form-group">
+                    <label for="problemType">Tipo de Problema:</label>
+                    <select id="problemType" name="problemType" required>
+                        <option value="">-- Selecciona un problema --</option>
+                        <option value="venta-drogas">Venta de drogas</option>
+                        <option value="consumo-via">Consumo en vía pública</option>
+                        <option value="vandalismo">Vandalismo</option>
+                        <option value="falta-iluminacion">Falta de iluminación</option>
+                        <option value="otro">Otro</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="frequency">Frecuencia:</label>
+                    <select id="frequency" name="frequency" required>
+                        <option value="">-- Selecciona frecuencia --</option>
+                        <option value="una-vez">Una vez</option>
+                        <option value="frecuente">Frecuente</option>
+                        <option value="permanente">Permanente</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Descripción Detallada:</label>
+                    <textarea id="description" name="description" placeholder="Describe el incidente con detalle..." required></textarea>
+                </div>
+
+                <button type="submit">ENVIAR REPORTE</button>
+            </form>
+
+            <!-- Lista de reportes -->
+            <div class="reports-list" id="reportsList" style="display: none;">
+                <h3>Reportes Registrados</h3>
+                <div id="reportsContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
     <script>
-        const map = L.map('map').setView([5.8268, -73.0333], 13);
+        // Variables globales
+        let currentMarker = null;
+        let currentLat = 5.8268;
+        let currentLng = -73.0333;
+        let reports = [];
+        let reportMarkers = [];
+
+        // Mapeo de valores a etiquetas
+        const problemTypeLabels = {
+            'venta-drogas': 'Venta de drogas',
+            'consumo-via': 'Consumo en vía pública',
+            'vandalismo': 'Vandalismo',
+            'falta-iluminacion': 'Falta de iluminación',
+            'otro': 'Otro'
+        };
+
+        const frequencyLabels = {
+            'una-vez': 'Una vez',
+            'frecuente': 'Frecuente',
+            'permanente': 'Permanente'
+        };
+
+        // Inicializar el mapa
+        const map = L.map('map').setView([currentLat, currentLng], 13);
+
+        // Agregar capa de OpenStreetMap
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
             maxZoom: 19,
+            tileSize: 256
         }).addTo(map);
 
-        let marker;
+        // Crear marcador inicial
+        currentMarker = L.marker([currentLat, currentLng], {
+            draggable: false,
+            opacity: 0.7
+        }).addTo(map);
+        currentMarker.bindPopup('<b>Ubicación del reporte</b><br>Haz clic en el mapa para mover').openPopup();
+
+        // Evento: clic en el mapa para mover marcador
         map.on('click', function(e) {
-            const coords = e.latlng;
-            if (marker) {
-                marker.setLatLng(coords);
-            } else {
-                marker = L.marker(coords).addTo(map);
-            }
-            document.getElementById('coordinates').textContent = `Coordinates: ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`;
+            currentLat = e.latlng.lat;
+            currentLng = e.latlng.lng;
+
+            // Mover marcador existente
+            currentMarker.setLatLng([currentLat, currentLng]);
+
+            // Actualizar coordenadas
+            updateCoordinatesDisplay();
         });
 
-        const reportForm = document.getElementById('reportForm');
-        reportForm.addEventListener('submit', function(e) {
+        // Función para actualizar el texto de coordenadas
+        function updateCoordinatesDisplay() {
+            document.getElementById('coordinatesText').textContent = 
+                `Ubicación del reporte: ${currentLat.toFixed(4)}, ${currentLng.toFixed(4)}`;
+        }
+
+        // Manejar el envío del formulario
+        const form = document.getElementById('reportForm');
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        const reportsContainer = document.getElementById('reportsContainer');
+        const reportsList = document.getElementById('reportsList');
+
+        form.addEventListener('submit', function(e) {
             e.preventDefault();
+
+            // Validar que se haya seleccionado una ubicación
+            if (!currentLat || !currentLng) {
+                errorMessage.style.display = 'block';
+                errorMessage.textContent = '✗ Por favor, haz clic en el mapa para seleccionar la ubicación';
+                return;
+            }
+
+            // Obtener valores del formulario
             const problemType = document.getElementById('problemType').value;
             const frequency = document.getElementById('frequency').value;
             const description = document.getElementById('description').value;
-            const card = `<div><h2>${problemType}</h2><p>Frequency: ${frequency}</p><p>${description}</p></div>`;
-            document.getElementById('reportCards').insertAdjacentHTML('beforeend', card);
-            localStorage.setItem('reports', document.getElementById('reportCards').innerHTML);
+
+            // Validar campos
+            if (!problemType || !frequency || !description) {
+                errorMessage.style.display = 'block';
+                errorMessage.textContent = '✗ Por favor, completa todos los campos';
+                return;
+            }
+
+            // Crear objeto del reporte
+            const report = {
+                id: Date.now(),
+                problemType: problemType,
+                problemTypeLabel: problemTypeLabels[problemType],
+                frequency: frequency,
+                frequencyLabel: frequencyLabels[frequency],
+                description: description,
+                latitude: currentLat,
+                longitude: currentLng,
+                timestamp: new Date().toLocaleString('es-ES')
+            };
+
+            // Agregar reporte a la lista
+            reports.push(report);
+
+            // Crear marcador permanente en el mapa
+            const popupContent = `<b>${report.problemTypeLabel}</b><br>Frecuencia: ${report.frequencyLabel}`;
+            const reportMarker = L.marker([currentLat, currentLng], {
+                title: report.problemTypeLabel
+            }).addTo(map);
+            reportMarker.bindPopup(popupContent);
+            reportMarkers.push(reportMarker);
+
+            // Crear tarjeta del reporte
+            createReportCard(report);
+
+            // Mostrar lista de reportes
+            reportsList.style.display = 'block';
+
+            // Mostrar mensaje de éxito
+            successMessage.style.display = 'block';
+            errorMessage.style.display = 'none';
+
+            // Guardar en localStorage
+            localStorage.setItem('securityReports', JSON.stringify(reports));
+
+            // Limpiar formulario
+            form.reset();
+
+            // Volver a posición inicial del mapa
+            currentLat = 5.8268;
+            currentLng = -73.0333;
+            currentMarker.setLatLng([currentLat, currentLng]);
+            updateCoordinatesDisplay();
+
+            // Ocultar mensaje de éxito después de 4 segundos
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 4000);
         });
 
-        window.onload = function() {
-            const savedReports = localStorage.getItem('reports');
+        // Función para crear tarjeta del reporte
+        function createReportCard(report) {
+            const card = document.createElement('div');
+            card.className = 'report-card';
+            card.innerHTML = `
+                <h4>📍 Reporte #${report.id}</h4>
+                <div class="report-field">
+                    <strong>Tipo:</strong> ${report.problemTypeLabel}
+                </div>
+                <div class="report-field">
+                    <strong>Frecuencia:</strong> ${report.frequencyLabel}
+                </div>
+                <div class="report-field">
+                    <strong>Descripción:</strong> ${report.description}
+                </div>
+                <div class="report-field">
+                    <strong>Coordenadas:</strong> ${report.latitude.toFixed(4)}, ${report.longitude.toFixed(4)}
+                </div>
+                <div class="report-timestamp">
+                    ${report.timestamp}
+                </div>
+            `;
+            reportsContainer.insertBefore(card, reportsContainer.firstChild);
+        }
+
+        // Cargar reportes guardados al iniciar
+        window.addEventListener('load', function() {
+            const savedReports = localStorage.getItem('securityReports');
             if (savedReports) {
-                document.getElementById('reportCards').innerHTML = savedReports;
+                reports = JSON.parse(savedReports);
+                reports.forEach(report => {
+                    // Recrear marcadores
+                    const popupContent = `<b>${report.problemTypeLabel}</b><br>Frecuencia: ${report.frequencyLabel}`;
+                    const reportMarker = L.marker([report.latitude, report.longitude]).addTo(map);
+                    reportMarker.bindPopup(popupContent);
+                    reportMarkers.push(reportMarker);
+
+                    // Recrear tarjetas
+                    createReportCard(report);
+                });
+                if (reports.length > 0) {
+                    reportsList.style.display = 'block';
+                }
             }
-        };
+        });
+
+        // Ocultar mensajes de error al escribir
+        form.addEventListener('input', function() {
+            errorMessage.style.display = 'none';
+        });
     </script>
 </body>
 </html>
