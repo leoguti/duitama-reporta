@@ -8,10 +8,6 @@
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
     
-    <!-- Leaflet MarkerCluster CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/MarkerCluster.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/MarkerCluster.Default.min.css" />
-    
     <style>
         * {
             margin: 0;
@@ -141,12 +137,6 @@
             color: #e74c3c;
         }
 
-        .filter-btn.tipo-basura:hover {
-            background-color: #ffe8e8;
-            border-color: #e74c3c;
-            color: #e74c3c;
-        }
-
         .filter-btn.tipo-basura.active {
             background-color: #e74c3c;
             color: white;
@@ -158,12 +148,6 @@
             color: #e67e22;
         }
 
-        .filter-btn.tipo-caneca:hover {
-            background-color: #fff4e8;
-            border-color: #e67e22;
-            color: #e67e22;
-        }
-
         .filter-btn.tipo-caneca.active {
             background-color: #e67e22;
             color: white;
@@ -171,12 +155,6 @@
         }
 
         .filter-btn.tipo-falta {
-            border-color: #3498db;
-            color: #3498db;
-        }
-
-        .filter-btn.tipo-falta:hover {
-            background-color: #e8f4ff;
             border-color: #3498db;
             color: #3498db;
         }
@@ -278,13 +256,11 @@
         select {
             background-color: white;
             cursor: pointer;
-            padding: 12px;
         }
 
         textarea {
             resize: vertical;
             min-height: 100px;
-            font-family: inherit;
         }
 
         .button-group {
@@ -312,10 +288,6 @@
         .btn-submit:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 12px rgba(39, 174, 96, 0.3);
-        }
-
-        .btn-submit:active {
-            transform: translateY(0);
         }
 
         .btn-reset {
@@ -403,7 +375,6 @@
             font-size: 0.95em;
             padding: 5px 10px;
             border-radius: 4px;
-            display: inline-block;
         }
 
         .report-type.basura-acumulada {
@@ -440,7 +411,6 @@
             padding: 8px;
             border-radius: 4px;
             font-family: 'Courier New', monospace;
-            word-break: break-all;
         }
 
         .report-date {
@@ -499,30 +469,6 @@
 
             .form-section {
                 max-height: none;
-            }
-
-            .map-legend {
-                gap: 10px;
-            }
-
-            .legend-item {
-                font-size: 0.85em;
-            }
-
-            .filter-section {
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            .filter-label {
-                margin-right: 0;
-                width: 100%;
-                text-align: center;
-            }
-
-            .filter-btn {
-                flex: 1;
-                min-width: 100px;
             }
         }
     </style>
@@ -620,9 +566,6 @@
     <!-- Leaflet JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     
-    <!-- Leaflet MarkerCluster JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/leaflet.markercluster.min.js"></script>
-    
     <script>
         // Variables globales
         let selectedMarker = null;
@@ -630,130 +573,73 @@
         let selectedLng = null;
         let reports = [];
         let reportCounter = 0;
-        let markerClusterGroup = null;
+        let reportMarkers = [];
         let currentFilter = 'todos';
-        let mapElement = document.getElementById('map');
 
-        // Definir colores según tipo de problema
+        // Colores por tipo
         const problemColors = {
             'basura_acumulada': {
                 color: '#e74c3c',
-                icon: '🗑️',
                 cardClass: 'tipo-basura'
             },
             'caneca_danada': {
                 color: '#e67e22',
-                icon: '💔',
                 cardClass: 'tipo-caneca'
             },
             'falta_caneca': {
                 color: '#3498db',
-                icon: '❌',
                 cardClass: 'tipo-falta'
             }
         };
 
-        // Función para crear un circleMarker SIN interactividad
-        function createCircleMarker(lat, lng, type, interactive = false) {
-            const colorInfo = problemColors[type];
-            
-            return L.circleMarker([lat, lng], {
-                radius: 10,
-                fillColor: colorInfo.color,
-                color: '#000',
-                weight: 2,
-                opacity: 1,
-                fillOpacity: 0.85,
-                interactive: interactive // CLAVE: desactivar interactividad
-            });
-        }
+        // Inicializar mapa
+        const map = L.map('map').setView([5.8268, -73.0333], 13);
 
-        // Inicializar el mapa
-        const map = L.map(mapElement).setView([5.8268, -73.0333], 13);
-
-        // Agregar capa de OpenStreetMap
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors',
             maxZoom: 19
         }).addTo(map);
 
-        // Inicializar grupo de marcadores
-        markerClusterGroup = L.markerClusterGroup();
-        map.addLayer(markerClusterGroup);
-
-        // Marcador del centro (SIN interactividad)
-        const centerMarker = L.circleMarker([5.8268, -73.0333], {
+        // Centro de Duitama (sin interactividad)
+        L.circleMarker([5.8268, -73.0333], {
             radius: 12,
             fillColor: '#27ae60',
             color: '#000',
             weight: 2,
-            opacity: 1,
             fillOpacity: 0.85,
             interactive: false
         }).addTo(map);
 
-        centerMarker.bindPopup('<strong>Duitama, Colombia</strong><br>Centro de la ciudad');
-
-        // Función para actualizar coordenadas
-        function updateCoordinatesDisplay(lat, lng) {
-            selectedLat = lat;
-            selectedLng = lng;
-            const coordinatesDisplay = document.getElementById('coordinatesDisplay');
-            coordinatesDisplay.textContent = `📍 Ubicación seleccionada: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-            coordinatesDisplay.classList.add('active');
-            document.getElementById('mapInstruction').style.display = 'none';
-        }
-
-        // EVENTO DE CLIC EN EL MAPA - Simple y directo
-        mapElement.addEventListener('click', function(e) {
-            // Obtener las coordenadas del clic
-            const rect = mapElement.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            
-            // Convertir a coordenadas de Leaflet
-            const point = map.containerPointToLatLng([x, y]);
-            const lat = point.lat;
-            const lng = point.lng;
+        // MANEJADOR DE CLIC DEL MAPA
+        map.on('click', function(e) {
+            const lat = e.latlng.lat;
+            const lng = e.latlng.lng;
 
             // Eliminar marcador anterior
             if (selectedMarker !== null) {
                 map.removeLayer(selectedMarker);
             }
 
-            // Crear nuevo marcador amarillo (CON interactividad para popup)
+            // Crear nuevo marcador amarillo
             selectedMarker = L.circleMarker([lat, lng], {
                 radius: 10,
                 fillColor: '#f1c40f',
                 color: '#000',
                 weight: 2,
-                opacity: 1,
                 fillOpacity: 0.85,
-                interactive: true
+                interactive: false
             }).addTo(map);
 
-            selectedMarker.bindPopup(`<strong>Ubicación seleccionada</strong><br>Lat: ${lat.toFixed(4)}<br>Lng: ${lng.toFixed(4)}`);
-            selectedMarker.openPopup();
-
             // Actualizar coordenadas
-            updateCoordinatesDisplay(lat, lng);
+            selectedLat = lat;
+            selectedLng = lng;
+            const coordinatesDisplay = document.getElementById('coordinatesDisplay');
+            coordinatesDisplay.textContent = `📍 Ubicación seleccionada: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+            coordinatesDisplay.classList.add('active');
+            document.getElementById('mapInstruction').style.display = 'none';
         });
 
-        // Función para actualizar visibilidad de marcadores
-        function updateMapFilter() {
-            markerClusterGroup.eachLayer(function(layer) {
-                const report = layer.reportData;
-                if (report) {
-                    if (currentFilter === 'todos' || report.type === currentFilter) {
-                        layer.setOpacity(1);
-                    } else {
-                        layer.setOpacity(0.2);
-                    }
-                }
-            });
-        }
-
-        // Función para renderizar reportes
+        // Renderizar reportes
         function renderReports() {
             const reportsList = document.getElementById('reportsList');
             const emptyReports = document.getElementById('emptyReports');
@@ -775,7 +661,7 @@
                 const hiddenClass = shouldHide ? 'hidden' : '';
 
                 return `
-                    <div class="report-card ${colorInfo.cardClass} ${hiddenClass}" data-type="${report.type}">
+                    <div class="report-card ${colorInfo.cardClass} ${hiddenClass}">
                         <div class="report-card-header">
                             <span class="report-type ${typeClass}">${getTypeLabel(report.type)}</span>
                             <span class="report-number">#${report.id}</span>
@@ -793,7 +679,6 @@
             updateFilterCount();
         }
 
-        // Actualizar contador
         function updateFilterCount() {
             const filterCount = document.getElementById('filterCount');
             let count = reports.length;
@@ -805,7 +690,6 @@
             filterCount.textContent = `${count} reporte${count !== 1 ? 's' : ''}`;
         }
 
-        // Obtener etiqueta del tipo
         function getTypeLabel(type) {
             const labels = {
                 'basura_acumulada': '🗑️ Basura Acumulada',
@@ -815,19 +699,28 @@
             return labels[type] || type;
         }
 
-        // Eliminar reporte
         function deleteReport(index) {
-            const report = reports[index];
-            
-            if (report.marker) {
-                markerClusterGroup.removeLayer(report.marker);
+            const marker = reportMarkers[index];
+            if (marker) {
+                map.removeLayer(marker);
             }
-
             reports.splice(index, 1);
+            reportMarkers.splice(index, 1);
             renderReports();
+            updateMapFilter();
         }
 
-        // Manejar envío del formulario
+        function updateMapFilter() {
+            reportMarkers.forEach((marker, index) => {
+                if (currentFilter === 'todos' || reports[index].type === currentFilter) {
+                    marker.setStyle({ opacity: 1, fillOpacity: 0.85 });
+                } else {
+                    marker.setStyle({ opacity: 0.2, fillOpacity: 0.1 });
+                }
+            });
+        }
+
+        // Envío del formulario
         const form = document.getElementById('reportForm');
         const successMessage = document.getElementById('successMessage');
         const mapInstruction = document.getElementById('mapInstruction');
@@ -843,11 +736,16 @@
             const problemType = document.getElementById('problemType').value;
             const description = document.getElementById('description').value;
 
-            // Crear marcador permanente (sin interactividad)
-            const reportMarker = createCircleMarker(selectedLat, selectedLng, problemType, false);
-            markerClusterGroup.addLayer(reportMarker);
-
-            reportMarker.bindPopup(`<strong>${getTypeLabel(problemType)}</strong><br>${description}`);
+            // Crear marcador del reporte (sin interactividad)
+            const colorInfo = problemColors[problemType];
+            const reportMarker = L.circleMarker([selectedLat, selectedLng], {
+                radius: 10,
+                fillColor: colorInfo.color,
+                color: '#000',
+                weight: 2,
+                fillOpacity: 0.85,
+                interactive: false
+            }).addTo(map);
 
             const now = new Date();
             const dateString = now.toLocaleString('es-CO', {
@@ -864,12 +762,11 @@
                 description: description,
                 lat: selectedLat,
                 lng: selectedLng,
-                date: dateString,
-                marker: reportMarker
+                date: dateString
             };
 
-            reportMarker.reportData = report;
             reports.push(report);
+            reportMarkers.push(reportMarker);
             renderReports();
 
             successMessage.style.display = 'block';
@@ -896,7 +793,7 @@
             mapInstruction.style.display = 'none';
         });
 
-        // Manejar filtros
+        // Filtros
         const filterButtons = document.querySelectorAll('.filter-btn');
         filterButtons.forEach(button => {
             button.addEventListener('click', function() {
