@@ -581,7 +581,7 @@
                         <select id="problemType" name="problemType" required>
                             <option value="">-- Selecciona un tipo --</option>
                             <option value="basura_acumulada">🗑️ Basura Acumulada</option>
-                            <option value="caneca_danada">💔 Caneca Dañada</option>
+                            <option value="caneca_danada">��� Caneca Dañada</option>
                             <option value="falta_caneca">❌ Falta Caneca</option>
                         </select>
                     </div>
@@ -647,7 +647,7 @@
         function createCircleMarker(lat, lng, type) {
             const colorInfo = problemColors[type];
             
-            return L.circleMarker([lat, lng], {
+            const circle = L.circleMarker([lat, lng], {
                 radius: 10,
                 fillColor: colorInfo.color,
                 color: '#000',
@@ -655,6 +655,13 @@
                 opacity: 1,
                 fillOpacity: 0.8
             });
+
+            // Prevenir que el clic en el círculo se propague al mapa
+            circle.on('click', function(e) {
+                L.DomEvent.stopPropagation(e);
+            });
+
+            return circle;
         }
 
         // Inicializar el mapa
@@ -681,6 +688,9 @@
         }).addTo(map);
 
         centerMarker.bindPopup('<strong>Duitama, Colombia</strong><br>Centro de la ciudad').openPopup();
+        centerMarker.on('click', function(e) {
+            L.DomEvent.stopPropagation(e);
+        });
 
         // Función para actualizar la visualización de coordenadas
         function updateCoordinatesDisplay(lat, lng) {
@@ -716,6 +726,11 @@
 
             selectedMarker.bindPopup(`<strong>Ubicación seleccionada</strong><br>Lat: ${lat.toFixed(4)}<br>Lng: ${lng.toFixed(4)}`).openPopup();
 
+            // Prevenir propagación del evento
+            selectedMarker.on('click', function(e) {
+                L.DomEvent.stopPropagation(e);
+            });
+
             // Actualizar las coordenadas
             updateCoordinatesDisplay(lat, lng);
         });
@@ -728,7 +743,7 @@
                     if (currentFilter === 'todos' || report.type === currentFilter) {
                         layer.setOpacity(1);
                     } else {
-                        layer.setOpacity(0);
+                        layer.setOpacity(0.3);
                     }
                 }
             });
