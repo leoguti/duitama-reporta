@@ -91,6 +91,11 @@
             border: 2px solid #000;
         }
 
+        .icon-verde {
+            background-color: #27ae60;
+            border: 2px solid #000;
+        }
+
         .filter-section {
             background-color: white;
             padding: 15px 20px;
@@ -206,6 +211,7 @@
             width: 100%;
             flex: 1;
             min-height: 500px;
+            cursor: crosshair;
         }
 
         .coordinates-display {
@@ -545,6 +551,10 @@
                 <div class="legend-icon icon-amarillo"></div>
                 <span>Ubicación Temporal</span>
             </div>
+            <div class="legend-item">
+                <div class="legend-icon icon-verde"></div>
+                <span>Centro Duitama</span>
+            </div>
         </div>
 
         <div class="filter-section">
@@ -581,7 +591,7 @@
                         <select id="problemType" name="problemType" required>
                             <option value="">-- Selecciona un tipo --</option>
                             <option value="basura_acumulada">🗑️ Basura Acumulada</option>
-                            <option value="caneca_danada">��� Caneca Dañada</option>
+                            <option value="caneca_danada">💔 Caneca Dañada</option>
                             <option value="falta_caneca">❌ Falta Caneca</option>
                         </select>
                     </div>
@@ -611,7 +621,7 @@
     <!-- Leaflet JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     
-    <!-- Leaflet MarkerCluster JS (opcional) -->
+    <!-- Leaflet MarkerCluster JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/leaflet.markercluster.min.js"></script>
     
     <script>
@@ -653,10 +663,10 @@
                 color: '#000',
                 weight: 2,
                 opacity: 1,
-                fillOpacity: 0.8
+                fillOpacity: 0.85
             });
 
-            // Prevenir que el clic en el círculo se propague al mapa
+            // Permitir interacción pero no interferir con el mapa
             circle.on('click', function(e) {
                 L.DomEvent.stopPropagation(e);
             });
@@ -665,7 +675,10 @@
         }
 
         // Inicializar el mapa
-        const map = L.map('map').setView([5.8268, -73.0333], 13);
+        const map = L.map('map', {
+            dragging: true,
+            zoomControl: true
+        }).setView([5.8268, -73.0333], 13);
 
         // Agregar capa de OpenStreetMap
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -684,10 +697,12 @@
             color: '#000',
             weight: 2,
             opacity: 1,
-            fillOpacity: 0.8
+            fillOpacity: 0.85
         }).addTo(map);
 
-        centerMarker.bindPopup('<strong>Duitama, Colombia</strong><br>Centro de la ciudad').openPopup();
+        centerMarker.bindPopup('<strong>Duitama, Colombia</strong><br>Centro de la ciudad');
+        
+        // Prevenir que el clic en el centro interfiera
         centerMarker.on('click', function(e) {
             L.DomEvent.stopPropagation(e);
         });
@@ -704,7 +719,7 @@
             document.getElementById('mapInstruction').style.display = 'none';
         }
 
-        // Manejar clic en el mapa
+        // Manejar clic en el mapa - DIRECTAMENTE EN EL OBJETO MAP
         map.on('click', function(e) {
             const lat = e.latlng.lat;
             const lng = e.latlng.lng;
@@ -721,12 +736,15 @@
                 color: '#000',
                 weight: 2,
                 opacity: 1,
-                fillOpacity: 0.8
+                fillOpacity: 0.85
             }).addTo(map);
 
-            selectedMarker.bindPopup(`<strong>Ubicación seleccionada</strong><br>Lat: ${lat.toFixed(4)}<br>Lng: ${lng.toFixed(4)}`).openPopup();
+            selectedMarker.bindPopup(`<strong>Ubicación seleccionada</strong><br>Lat: ${lat.toFixed(4)}<br>Lng: ${lng.toFixed(4)}`);
+            
+            // Abrir el popup
+            selectedMarker.openPopup();
 
-            // Prevenir propagación del evento
+            // Prevenir propagación
             selectedMarker.on('click', function(e) {
                 L.DomEvent.stopPropagation(e);
             });
@@ -742,8 +760,10 @@
                 if (report) {
                     if (currentFilter === 'todos' || report.type === currentFilter) {
                         layer.setOpacity(1);
+                        layer.setStyle({ opacity: 1, fillOpacity: 0.85 });
                     } else {
-                        layer.setOpacity(0.3);
+                        layer.setOpacity(0.2);
+                        layer.setStyle({ opacity: 0.2, fillOpacity: 0.1 });
                     }
                 }
             });
