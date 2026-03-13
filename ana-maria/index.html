@@ -1,145 +1,40 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Cruces Férreos Peligrosos - Duitama</title>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
-<style>
+<!-- Estilos del proyecto -->
+<link rel="stylesheet" href="css/styles.css">
 
-body{
-font-family:Arial, Helvetica, sans-serif;
-margin:0;
-background:#111;
-color:white;
-}
-
-header{
-background:repeating-linear-gradient(
-45deg,
-black,
-black 20px,
-#ffd600 20px,
-#ffd600 40px
-);
-padding:30px;
-text-align:center;
-}
-
-header h1{
-background:#ffd600;
-color:black;
-display:inline-block;
-padding:10px 20px;
-border-radius:8px;
-}
-
-#panelResumen{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-gap:10px;
-padding:15px;
-background:#111;
-border-bottom:4px solid #ffd600;
-}
-
-.estadistica{
-background:#222;
-padding:10px;
-border-left:5px solid #ffd600;
-font-weight:bold;
-border-radius:4px;
-}
-
-#alertaCritica{
-grid-column:1/-1;
-color:white;
-background:red;
-font-weight:bold;
-text-align:center;
-padding:10px;
-border-radius:4px;
-display:none;
-}
-
-#map{
-height:50vh;
-width:100%;
-}
-
-#coords{
-text-align:center;
-padding:10px;
-background:black;
-font-weight:bold;
-}
-
-.form-container{
-padding:25px;
-background:#222;
-}
-
-form{
-max-width:800px;
-margin:auto;
-display:grid;
-gap:12px;
-}
-
-input,select,textarea{
-padding:10px;
-border:none;
-border-radius:6px;
-}
-
-button{
-background:#ffd600;
-color:black;
-padding:12px;
-border:none;
-font-weight:bold;
-border-radius:6px;
-cursor:pointer;
-}
-
-button:hover{
-background:#ffea00;
-}
-
-#listaCruces{
-padding:30px;
-display:grid;
-gap:15px;
-max-width:900px;
-margin:auto;
-}
-
-.tarjeta{
-background:#333;
-border-left:6px solid #ffd600;
-padding:15px;
-border-radius:6px;
-}
-
-.tarjeta h3{
-margin-top:0;
-color:#ffd600;
-}
-
-</style>
 </head>
+
 
 <body>
 
 <header>
+
 <h1>Cruces Férreos Peligrosos - Duitama</h1>
-<p>La vía del tren divide nuestra ciudad. Estos son los cruces que necesitan atención.</p>
+
+<p>
+La vía del tren divide nuestra ciudad.  
+Estos son los cruces que necesitan atención.
+</p>
+
 </header>
 
-<div id="panelResumen">
+
+
+<!-- PANEL DE RESUMEN -->
+
+<section id="panelResumen">
 
 <div class="estadistica">
 Total de cruces: <span id="totalCruces">0</span>
@@ -163,7 +58,13 @@ Accidentes reportados: <span id="conAccidentes">0</span>
 
 <div id="alertaCritica"></div>
 
-</div>
+</section>
+
+
+
+<!-- MAPA -->
+
+<section id="mapaContainer">
 
 <div id="map"></div>
 
@@ -171,237 +72,113 @@ Accidentes reportados: <span id="conAccidentes">0</span>
 Ubicación del cruce: Haz clic en el mapa
 </div>
 
-<div class="form-container">
+</section>
+
+
+
+<!-- FORMULARIO -->
+
+<section class="form-container">
+
+<h2>Registrar estado de un cruce</h2>
 
 <form id="formCruce">
 
 <input type="hidden" id="lat">
 <input type="hidden" id="lng">
 
-<label>Nombre del cruce o calle</label>
+<label for="nombre">Nombre del cruce o calle</label>
 <input type="text" id="nombre" required>
 
-<label>Tiene señalización</label>
+
+
+<label for="senalizacion">Tiene señalización</label>
 <select id="senalizacion">
-<option>sí</option>
-<option>no</option>
-<option>dañada</option>
+
+<option value="sí">Sí</option>
+<option value="no">No</option>
+<option value="dañada">Dañada</option>
+
 </select>
 
-<label>Tiene barrera</label>
+
+
+<label for="barrera">Tiene barrera</label>
 <select id="barrera">
-<option>sí</option>
-<option>no</option>
-<option>dañada</option>
+
+<option value="sí">Sí</option>
+<option value="no">No</option>
+<option value="dañada">Dañada</option>
+
 </select>
 
-<label>Nivel de riesgo</label>
+
+
+<label for="riesgo">Nivel de riesgo</label>
 <select id="riesgo">
-<option>bajo</option>
-<option>medio</option>
-<option>alto</option>
-<option>crítico</option>
+
+<option value="bajo">Bajo</option>
+<option value="medio">Medio</option>
+<option value="alto">Alto</option>
+<option value="crítico">Crítico</option>
+
 </select>
 
-<label>¿Ha habido accidentes?</label>
+
+
+<label for="accidentes">¿Ha habido accidentes?</label>
 <select id="accidentes">
-<option>sí</option>
-<option>no</option>
-<option>no sé</option>
+
+<option value="sí">Sí</option>
+<option value="no">No</option>
+<option value="no sé">No sé</option>
+
 </select>
 
-<label>Descripción</label>
-<textarea id="descripcion"></textarea>
 
-<button type="submit">Enviar reporte</button>
+
+<label for="descripcion">Descripción</label>
+
+<textarea
+id="descripcion"
+placeholder="Describe la situación del cruce, visibilidad, tráfico, problemas..."
+></textarea>
+
+
+
+<button type="submit">
+Enviar reporte
+</button>
 
 </form>
 
-</div>
+</section>
+
+
+
+<!-- LISTA DE CRUCES REPORTADOS -->
+
+<section id="listaCrucesContainer">
+
+<h2>Cruces reportados</h2>
 
 <div id="listaCruces"></div>
 
+</section>
+
+
+
+<!-- LIBRERÍA LEAFLET -->
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<script>
 
-// MAPA
-var map = L.map('map').setView([5.8268, -73.0333], 14);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-maxZoom:19,
-attribution:'© OpenStreetMap'
-}).addTo(map);
+<!-- SCRIPT DEL PROYECTO -->
 
-let marcadorTemporal=null;
-let cruces=[];
+<script src="js/script.js"></script>
 
-// COLORES
-function colorRiesgo(r){
 
-switch(r){
-
-case "bajo": return "green";
-case "medio": return "yellow";
-case "alto": return "orange";
-case "crítico": return "red";
-default: return "gray";
-
-}
-
-}
-
-// CLICK MAPA
-map.on("click",function(e){
-
-let lat=e.latlng.lat.toFixed(6);
-let lng=e.latlng.lng.toFixed(6);
-
-if(marcadorTemporal==null){
-marcadorTemporal=L.marker([lat,lng]).addTo(map);
-}else{
-marcadorTemporal.setLatLng([lat,lng]);
-}
-
-document.getElementById("coords").innerText=
-"Ubicación del cruce: "+lat+", "+lng;
-
-document.getElementById("lat").value=lat;
-document.getElementById("lng").value=lng;
-
-});
-
-// PANEL RESUMEN
-function actualizarPanel(){
-
-let total=cruces.length;
-
-let riesgoAlto=0;
-let sinSenal=0;
-let sinBarrera=0;
-let conAccidentes=0;
-let alerta=false;
-
-cruces.forEach(c=>{
-
-if(c.riesgo==="alto"||c.riesgo==="crítico") riesgoAlto++;
-
-if(c.senalizacion==="no") sinSenal++;
-
-if(c.barrera==="no") sinBarrera++;
-
-if(c.accidentes==="sí") conAccidentes++;
-
-if(c.riesgo==="crítico" && c.senalizacion==="no"){
-alerta=true;
-}
-
-});
-
-document.getElementById("totalCruces").innerText=total;
-document.getElementById("riesgoAlto").innerText=riesgoAlto;
-document.getElementById("sinSenal").innerText=sinSenal;
-document.getElementById("sinBarrera").innerText=sinBarrera;
-document.getElementById("conAccidentes").innerText=conAccidentes;
-
-let alertaDiv=document.getElementById("alertaCritica");
-
-if(alerta){
-alertaDiv.style.display="block";
-alertaDiv.innerText="⚠ ALERTA: Existe al menos un cruce CRÍTICO sin señalización";
-}else{
-alertaDiv.style.display="none";
-}
-
-}
-
-// FORMULARIO
-document.getElementById("formCruce").addEventListener("submit",function(e){
-
-e.preventDefault();
-
-let lat=document.getElementById("lat").value;
-let lng=document.getElementById("lng").value;
-
-if(!lat){
-alert("Selecciona primero la ubicación en el mapa");
-return;
-}
-
-let cruce={
-
-nombre:document.getElementById("nombre").value,
-senalizacion:document.getElementById("senalizacion").value,
-barrera:document.getElementById("barrera").value,
-riesgo:document.getElementById("riesgo").value,
-accidentes:document.getElementById("accidentes").value,
-descripcion:document.getElementById("descripcion").value,
-lat:lat,
-lng:lng
-
-};
-
-cruces.push(cruce);
-
-// TARJETA
-let tarjeta=document.createElement("div");
-tarjeta.className="tarjeta";
-
-tarjeta.innerHTML=`
-<h3>${cruce.nombre}</h3>
-<p><b>Señalización:</b> ${cruce.senalizacion}</p>
-<p><b>Barrera:</b> ${cruce.barrera}</p>
-<p><b>Riesgo:</b> ${cruce.riesgo}</p>
-<p><b>Accidentes:</b> ${cruce.accidentes}</p>
-<p>${cruce.descripcion}</p>
-<p><b>Coordenadas:</b> ${cruce.lat}, ${cruce.lng}</p>
-`;
-
-document.getElementById("listaCruces").appendChild(tarjeta);
-
-// MARCADOR
-let color=colorRiesgo(cruce.riesgo);
-
-let borde = cruce.accidentes==="sí" ? "black":"#333";
-let grosor = cruce.accidentes==="sí" ? 4:1;
-
-let marcador=L.circleMarker([cruce.lat,cruce.lng],{
-
-radius:10,
-fillColor:color,
-color:borde,
-weight:grosor,
-fillOpacity:0.9
-
-}).addTo(map);
-
-marcador.bindPopup(`
-<b>${cruce.nombre}</b><br>
-Señalización: ${cruce.senalizacion}<br>
-Barrera: ${cruce.barrera}<br>
-Riesgo: ${cruce.riesgo}<br>
-Accidentes: ${cruce.accidentes}<br>
-${cruce.descripcion}
-`);
-
-// LIMPIAR
-if(marcadorTemporal){
-map.removeLayer(marcadorTemporal);
-marcadorTemporal=null;
-}
-
-document.getElementById("formCruce").reset();
-document.getElementById("coords").innerText="Ubicación del cruce: Haz clic en el mapa";
-
-document.getElementById("lat").value="";
-document.getElementById("lng").value="";
-
-// ACTUALIZAR PANEL
-actualizarPanel();
-
-});
-
-</script>
 
 </body>
 </html>
