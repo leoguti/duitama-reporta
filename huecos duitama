@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Huecos en las Vías - Duitama</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        header {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            min-height: calc(100vh - 120px);
+            gap: 20px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .map-section {
+            flex: 1;
+            min-width: 300px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Panel de estadísticas */
+        .statistics-panel {
+            background: linear-gradient(135deg, #fff9f5 0%, #ffeeeb 100%);
+            padding: 20px;
+            border-bottom: 3px solid #ff9800;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background-color: white;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            border-top: 4px solid #ff9800;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card.total {
+            border-top-color: #9e9e9e;
+        }
+
+        .stat-card.leve {
+            border-top-color: #ffeb3b;
+        }
+
+        .stat-card.grave {
+            border-top-color: #ff9800;
+        }
+
+        .stat-card.peligroso {
+            border-top-color: #f44336;
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-card.total .stat-number {
+            color: #9e9e9e;
+        }
+
+        .stat-card.leve .stat-number {
+            color: #ffeb3b;
+        }
+
+        .stat-card.grave .stat-number {
+            color: #ff9800;
+        }
+
+        .stat-card.peligroso .stat-number {
+            color: #f44336;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+            font-weight: 600;
+        }
+
+        #map {
+            width: 100%;
+            flex: 1;
+            min-height: 500px;
+        }
+
+        .coordinates-display {
+            background-color: #f9f9f9;
+            padding: 15px 20px;
+            border-top: 2px solid #ff9800;
+            font-size: 1em;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .coordinates-display span {
+            color: #f57c00;
+            font-weight: bold;
+        }
+
+        .legend {
+            background-color: white;
+            padding: 15px;
+            border-top: 2px solid #e0e0e0;
+            font-size: 0.9em;
+            color: #333;
+        }
+
+        .legend-title {
+            font-weight: bold;
+            color: #f57c00;
+            margin-bottom: 10px;
+        }
+
+        .legend-item {
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-circle {
+            border-radius: 50%;
+            border: 2px solid rgba(0, 0, 0, 0.3);
+        }
+
+        .legend-item-text {
+            font-size: 0.85em;
+        }
+
+        .form-section {
+            flex: 1;
+            min-width: 300px;
+            background-color: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 160px);
+            overflow-y: auto;
+        }
+
+        .form-section h2 {
+            color: #f57c00;
+            margin-bottom: 25px;
+            font-size: 1.5em;
+            border-bottom: 3px solid #ff9800;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 1em;
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+        }
+
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #ff9800;
+            box-shadow: 0 0 5px rgba(255, 152, 0, 0.3);
+        }
+
+        select {
+            cursor: pointer;
+            background-color: white;
+        }
+
+        select option {
+            padding: 8px;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+            max-height: 200px;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(255, 152, 0, 0.3);
+            margin-bottom: 20px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(255, 152, 0, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .success-message {
+            display: none;
+            background-color: #4caf50;
+            color: white;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        /* Estilos para la lista de reportes */
+        .reports-container {
+            margin-top: 30px;
+        }
+
+        .reports-container h3 {
+            color: #f57c00;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .report-card {
+            background: linear-gradient(135deg, #fff9f5 0%, #ffeeeb 100%);
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            animation: slideIn 0.3s ease;
+        }
+
+        .report-card h4 {
+            color: #f57c00;
+            margin-bottom: 10px;
+            font-size: 1.05em;
+        }
+
+        .report-card p {
+            color: #666;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        .report-card strong {
+            color: #333;
+        }
+
+        .report-card .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+            color: white;
+        }
+
+        .badge-leve {
+            background-color: #ffeb3b;
+            color: #333;
+        }
+
+        .badge-grave {
+            background-color: #ff9800;
+        }
+
+        .badge-peligroso {
+            background-color: #f44336;
+        }
+
+        .badge-pequeño {
+            background-color: #2196f3;
+        }
+
+        .badge-mediano {
+            background-color: #9c27b0;
+        }
+
+        .badge-grande {
+            background-color: #e91e63;
+        }
+
+        .report-coords {
+            background-color: rgba(255, 152, 0, 0.1);
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #f57c00;
+            font-family: 'Courier New', monospace;
+        }
+
+        .delete-btn {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            margin-top: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background-color: #d32f2f;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .statistics-panel {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                min-height: auto;
+            }
+
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            #map {
+                min-height: 400px;
+            }
+
+            .form-section {
+                max-height: none;
+            }
+
+            .statistics-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🛣️ Huecos en las Vías - Duitama</h1>
+    </header>
+
+    <div class="container">
+        <!-- Sección del Mapa -->
+        <div class="map-section">
+            <!-- Panel de Estadísticas -->
+            <div class="statistics-panel">
+                <div class="stat-card total">
+                    <div class="stat-number" id="totalReports">0</div>
+                    <div class="stat-label">Total de Reportes</div>
+                </div>
+                <div class="stat-card leve">
+                    <div class="stat-number" id="lveReports">0</div>
+                    <div class="stat-label">Leves</div>
+                </div>
+                <div class="stat-card grave">
+                    <div class="stat-number" id="graveReports">0</div>
+                    <div class="stat-label">Graves</div>
+                </div>
+                <div class="stat-card peligroso">
+                    <div class="stat-number" id="peligrosoReports">0</div>
+                    <div class="stat-label">Peligrosos</div>
+                </div>
+            </div>
+
+            <div id="map"></div>
+            <div class="coordinates-display">
+                Ubicación seleccionada: <span id="coordinates">5.8268, -73.0333</span>
+            </div>
+            <div class="legend">
+                <div class="legend-title">📍 Leyenda de Severidad</div>
+                <div class="legend-item">
+                    <div class="legend-circle" style="width: 12px; height: 12px; background-color: #ffeb3b;"></div>
+                    <span class="legend-item-text">Leve</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-circle" style="width: 12px; height: 12px; background-color: #ff9800;"></div>
+                    <span class="legend-item-text">Grave</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-circle" style="width: 12px; height: 12px; background-color: #f44336;"></div>
+                    <span class="legend-item-text">Peligroso</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección del Formulario -->
+        <div class="form-section">
+            <h2>Reportar Hueco</h2>
+            
+            <div class="success-message" id="successMessage">
+                ✓ Reporte enviado correctamente. ¡Gracias por reportar!
+            </div>
+
+            <form id="reportForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="gravedad">Gravedad del Hueco:</label>
+                        <select id="gravedad" name="gravedad" required>
+                            <option value="">-- Selecciona gravedad --</option>
+                            <option value="leve">Leve</option>
+                            <option value="grave">Grave</option>
+                            <option value="peligroso">Peligroso</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tamaño">Tamaño Aproximado:</label>
+                        <select id="tamaño" name="tamaño" required>
+                            <option value="">-- Selecciona tamaño --</option>
+                            <option value="pequeño">Pequeño</option>
+                            <option value="mediano">Mediano</option>
+                            <option value="grande">Grande</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="descripcion">Descripción:</label>
+                    <textarea id="descripcion" name="descripcion" placeholder="Proporciona detalles adicionales sobre el hueco..." required></textarea>
+                </div>
+
+                <button type="submit">Enviar Reporte</button>
+            </form>
+
+            <!-- Contenedor de reportes -->
+            <div class="reports-container" id="reportsContainer">
+                <h3>Reportes Enviados</h3>
+                <div id="reportsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+    <script>
+        // Inicializar el mapa
+        const map = L.map('map').setView([5.8268, -73.0333], 14);
+
+        // Agregar capa de OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19,
+            maxNativeZoom: 18
+        }).addTo(map);
+
+        // Variable para almacenar el marcador actual
+        let currentMarker = null;
+        let selectedCoordinates = {
+            lat: 5.8268,
+            lng: -73.0333
+        };
+
+        // Array para almacenar los reportes
+        let reports = [];
+
+        // Crear marcador inicial en el centro de Duitama
+        currentMarker = L.marker([5.8268, -73.0333], {
+            title: 'Ubicación seleccionada'
+        }).bindPopup('<b>Ubicación del Reporte</b>').addTo(map);
+
+        // Función para obtener el color según la gravedad
+        function getColorByGravedad(gravedad) {
+            switch(gravedad) {
+                case 'leve':
+                    return '#ffeb3b'; // Amarillo
+                case 'grave':
+                    return '#ff9800'; // Naranja
+                case 'peligroso':
+                    return '#f44336'; // Rojo
+                default:
+                    return '#9e9e9e'; // Gris
+            }
+        }
+
+        // Función para obtener el tamaño del círculo en píxeles
+        function getSizeByTamaño(tamaño) {
+            switch(tamaño) {
+                case 'pequeño':
+                    return 10;
+                case 'mediano':
+                    return 20;
+                case 'grande':
+                    return 30;
+                default:
+                    return 15;
+            }
+        }
+
+        // Función para crear un círculo con estilos personalizados
+        function createCircleMarker(lat, lng, gravedad, tamaño, reportData) {
+            const radius = getSizeByTamaño(tamaño);
+            const color = getColorByGravedad(gravedad);
+
+            const circle = L.circleMarker([lat, lng], {
+                radius: radius,
+                fillColor: color,
+                color: 'rgba(0, 0, 0, 0.3)',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.85
+            }).bindPopup(`
+                <b>Reporte de Hueco</b><br>
+                <strong>Gravedad:</strong> ${gravedad.toUpperCase()}<br>
+                <strong>Tamaño:</strong> ${tamaño.charAt(0).toUpperCase() + tamaño.slice(1)}<br>
+                <strong>Descripción:</strong> ${reportData.descripcion}<br>
+                <strong>Fecha:</strong> ${reportData.fecha}
+            `).addTo(map);
+
+            return circle;
+        }
+
+        // Función para actualizar las estadísticas
+        function updateStatistics() {
+            let total = reports.length;
+            let leve = reports.filter(r => r.gravedad === 'leve').length;
+            let grave = reports.filter(r => r.gravedad === 'grave').length;
+            let peligroso = reports.filter(r => r.gravedad === 'peligroso').length;
+
+            // Actualizar elementos del DOM
+            document.getElementById('totalReports').textContent = total;
+            document.getElementById('lveReports').textContent = leve;
+            document.getElementById('graveReports').textContent = grave;
+            document.getElementById('peligrosoReports').textContent = peligroso;
+
+            console.log('Estadísticas actualizadas:', { total, leve, grave, peligroso });
+        }
+
+        // Función para actualizar coordenadas
+        function updateCoordinates(lat, lng) {
+            selectedCoordinates.lat = lat;
+            selectedCoordinates.lng = lng;
+            
+            // Mostrar coordenadas con formato
+            const coordinatesDisplay = document.getElementById('coordinates');
+            coordinatesDisplay.textContent = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+            
+            console.log('Coordenadas actualizadas:', selectedCoordinates);
+        }
+
+        // Manejar clics en el mapa
+        map.on('click', function(e) {
+            const lat = e.latlng.lat;
+            const lng = e.latlng.lng;
+
+            // Remover marcador anterior si existe
+            if (currentMarker) {
+                map.removeLayer(currentMarker);
+            }
+
+            // Crear nuevo marcador en la posición del clic
+            currentMarker = L.marker([lat, lng], {
+                title: 'Ubicación seleccionada',
+                draggable: true
+            }).bindPopup('<b>Ubicación del Reporte</b>').addTo(map);
+
+            // Manejar el arrastre del marcador
+            currentMarker.on('dragend', function() {
+                const draggedLat = currentMarker.getLatLng().lat;
+                const draggedLng = currentMarker.getLatLng().lng;
+                updateCoordinates(draggedLat, draggedLng);
+                currentMarker.openPopup();
+            });
+
+            // Actualizar coordenadas mostradas
+            updateCoordinates(lat, lng);
+
+            // Abrir popup
+            currentMarker.openPopup();
+        });
+
+        // Función para crear una tarjeta de reporte
+        function createReportCard(report, index) {
+            const card = document.createElement('div');
+            card.className = 'report-card';
+            card.innerHTML = `
+                <h4>Reporte #${index + 1}</h4>
+                <div>
+                    <span class="badge badge-${report.gravedad}">Gravedad: ${report.gravedad.charAt(0).toUpperCase() + report.gravedad.slice(1)}</span>
+                    <span class="badge badge-${report.tamaño}">Tamaño: ${report.tamaño.charAt(0).toUpperCase() + report.tamaño.slice(1)}</span>
+                </div>
+                <p><strong>Descripción:</strong> ${report.descripcion}</p>
+                <p><strong>Fecha:</strong> ${report.fecha}</p>
+                <div class="report-coords">
+                    📍 ${report.coordenadas.lat.toFixed(4)}, ${report.coordenadas.lng.toFixed(4)}
+                </div>
+                <button class="delete-btn" onclick="deleteReport(${index})">Eliminar</button>
+            `;
+            return card;
+        }
+
+        // Función para renderizar la lista de reportes
+        function renderReports() {
+            const reportsList = document.getElementById('reportsList');
+            reportsList.innerHTML = '';
+            
+            if (reports.length === 0) {
+                reportsList.innerHTML = '<p style="color: #999; font-style: italic;">No hay reportes aún. ¡Sé el primero en reportar!</p>';
+                return;
+            }
+
+            reports.forEach((report, index) => {
+                const card = createReportCard(report, index);
+                reportsList.appendChild(card);
+            });
+        }
+
+        // Función para eliminar un reporte
+        function deleteReport(index) {
+            if (reports[index] && reports[index].marker) {
+                // Remover marcador del mapa
+                map.removeLayer(reports[index].marker);
+            }
+            reports.splice(index, 1);
+            renderReports();
+            updateStatistics(); // Actualizar estadísticas al eliminar
+        }
+
+        // Manejar el formulario
+        const form = document.getElementById('reportForm');
+        const successMessage = document.getElementById('successMessage');
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Obtener datos del formulario
+            const gravedad = document.getElementById('gravedad').value;
+            const tamaño = document.getElementById('tamaño').value;
+            const descripcion = document.getElementById('descripcion').value;
+
+            // Crear objeto con los datos
+            const reportData = {
+                gravedad: gravedad,
+                tamaño: tamaño,
+                descripcion: descripcion,
+                fecha: new Date().toLocaleString('es-CO'),
+                coordenadas: {
+                    lat: selectedCoordinates.lat,
+                    lng: selectedCoordinates.lng
+                }
+            };
+
+            // Crear círculo permanente en el mapa
+            const circleMarker = createCircleMarker(
+                reportData.coordenadas.lat,
+                reportData.coordenadas.lng,
+                gravedad,
+                tamaño,
+                reportData
+            );
+
+            // Agregar referencia del círculo al reporte
+            reportData.marker = circleMarker;
+
+            // Agregar reporte a la lista
+            reports.push(reportData);
+
+            console.log('Reporte enviado:', reportData);
+            console.log('Total de reportes:', reports.length);
+
+            // Mostrar mensaje de éxito
+            successMessage.classList.add('show');
+
+            // Renderizar tarjetas de reportes
+            renderReports();
+
+            // Actualizar estadísticas
+            updateStatistics();
+
+            // Limpiar formulario
+            form.reset();
+
+            // Ocultar mensaje después de 4 segundos
+            setTimeout(() => {
+                successMessage.classList.remove('show');
+            }, 4000);
+        });
+
+        // Renderizar lista inicial (vacía) y actualizar estadísticas
+        renderReports();
+        updateStatistics();
+    </script>
+</body>
+</html>
