@@ -8,7 +8,7 @@
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
     
-    <!-- Leaflet MarkerCluster CSS (opcional, para agrupar marcadores) -->
+    <!-- Leaflet MarkerCluster CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/MarkerCluster.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/MarkerCluster.Default.min.css" />
     
@@ -211,7 +211,6 @@
             width: 100%;
             flex: 1;
             min-height: 500px;
-            cursor: crosshair;
         }
 
         .coordinates-display {
@@ -629,10 +628,11 @@
         let selectedMarker = null;
         let selectedLat = null;
         let selectedLng = null;
-        let reports = []; // Lista de reportes guardados
-        let reportCounter = 0; // Contador de reportes
-        let markerClusterGroup = null; // Grupo de marcadores agrupados
-        let currentFilter = 'todos'; // Filtro actual
+        let reports = [];
+        let reportCounter = 0;
+        let markerClusterGroup = null;
+        let currentFilter = 'todos';
+        let mapElement = document.getElementById('map');
 
         // Definir colores según tipo de problema
         const problemColors = {
@@ -653,32 +653,23 @@
             }
         };
 
-        // Función para crear un circleMarker con color según el tipo
-        function createCircleMarker(lat, lng, type) {
+        // Función para crear un circleMarker SIN interactividad
+        function createCircleMarker(lat, lng, type, interactive = false) {
             const colorInfo = problemColors[type];
             
-            const circle = L.circleMarker([lat, lng], {
+            return L.circleMarker([lat, lng], {
                 radius: 10,
                 fillColor: colorInfo.color,
                 color: '#000',
                 weight: 2,
                 opacity: 1,
-                fillOpacity: 0.85
+                fillOpacity: 0.85,
+                interactive: interactive // CLAVE: desactivar interactividad
             });
-
-            // Permitir interacción pero no interferir con el mapa
-            circle.on('click', function(e) {
-                L.DomEvent.stopPropagation(e);
-            });
-
-            return circle;
         }
 
         // Inicializar el mapa
-        const map = L.map('map', {
-            dragging: true,
-            zoomControl: true
-        }).setView([5.8268, -73.0333], 13);
+        const map = L.map(mapElement).setView([5.8268, -73.0333], 13);
 
         // Agregar capa de OpenStreetMap
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -686,90 +677,83 @@
             maxZoom: 19
         }).addTo(map);
 
-        // Inicializar grupo de marcadores agrupados
+        // Inicializar grupo de marcadores
         markerClusterGroup = L.markerClusterGroup();
         map.addLayer(markerClusterGroup);
 
-        // Marcador de referencia en el centro de Duitama (círculo verde)
+        // Marcador del centro (SIN interactividad)
         const centerMarker = L.circleMarker([5.8268, -73.0333], {
             radius: 12,
             fillColor: '#27ae60',
             color: '#000',
             weight: 2,
             opacity: 1,
-            fillOpacity: 0.85
+            fillOpacity: 0.85,
+            interactive: false
         }).addTo(map);
 
         centerMarker.bindPopup('<strong>Duitama, Colombia</strong><br>Centro de la ciudad');
-        
-        // Prevenir que el clic en el centro interfiera
-        centerMarker.on('click', function(e) {
-            L.DomEvent.stopPropagation(e);
-        });
 
-        // Función para actualizar la visualización de coordenadas
+        // Función para actualizar coordenadas
         function updateCoordinatesDisplay(lat, lng) {
             selectedLat = lat;
             selectedLng = lng;
             const coordinatesDisplay = document.getElementById('coordinatesDisplay');
             coordinatesDisplay.textContent = `📍 Ubicación seleccionada: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
             coordinatesDisplay.classList.add('active');
-            
-            // Ocultar la instrucción
             document.getElementById('mapInstruction').style.display = 'none';
         }
 
-        // Manejar clic en el mapa - DIRECTAMENTE EN EL OBJETO MAP
-        map.on('click', function(e) {
-            const lat = e.latlng.lat;
-            const lng = e.latlng.lng;
+        // EVENTO DE CLIC EN EL MAPA - Simple y directo
+        mapElement.addEventListener('click', function(e) {
+            // Obtener las coordenadas del clic
+            const rect = mapElement.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Convertir a coordenadas de Leaflet
+            const point = map.containerPointToLatLng([x, y]);
+            const lat = point.lat;
+            const lng = point.lng;
 
-            // Si hay un marcador anterior, eliminarlo
+            // Eliminar marcador anterior
             if (selectedMarker !== null) {
                 map.removeLayer(selectedMarker);
             }
 
-            // Crear nuevo círculo marcador en la ubicación seleccionada (amarillo)
+            // Crear nuevo marcador amarillo (CON interactividad para popup)
             selectedMarker = L.circleMarker([lat, lng], {
                 radius: 10,
                 fillColor: '#f1c40f',
                 color: '#000',
                 weight: 2,
                 opacity: 1,
-                fillOpacity: 0.85
+                fillOpacity: 0.85,
+                interactive: true
             }).addTo(map);
 
             selectedMarker.bindPopup(`<strong>Ubicación seleccionada</strong><br>Lat: ${lat.toFixed(4)}<br>Lng: ${lng.toFixed(4)}`);
-            
-            // Abrir el popup
             selectedMarker.openPopup();
 
-            // Prevenir propagación
-            selectedMarker.on('click', function(e) {
-                L.DomEvent.stopPropagation(e);
-            });
-
-            // Actualizar las coordenadas
+            // Actualizar coordenadas
             updateCoordinatesDisplay(lat, lng);
         });
 
-        // Función para actualizar la visibilidad de marcadores según el filtro
+        // Función para actualizar visibilidad de marcadores
         function updateMapFilter() {
             markerClusterGroup.eachLayer(function(layer) {
                 const report = layer.reportData;
                 if (report) {
                     if (currentFilter === 'todos' || report.type === currentFilter) {
                         layer.setOpacity(1);
-                        layer.setStyle({ opacity: 1, fillOpacity: 0.85 });
                     } else {
                         layer.setOpacity(0.2);
-                        layer.setStyle({ opacity: 0.2, fillOpacity: 0.1 });
                     }
                 }
             });
         }
 
-        // Función para renderizar la lista de reportes
+        // Función para renderizar reportes
         function renderReports() {
             const reportsList = document.getElementById('reportsList');
             const emptyReports = document.getElementById('emptyReports');
@@ -809,7 +793,7 @@
             updateFilterCount();
         }
 
-        // Función para actualizar el contador de filtros
+        // Actualizar contador
         function updateFilterCount() {
             const filterCount = document.getElementById('filterCount');
             let count = reports.length;
@@ -821,7 +805,7 @@
             filterCount.textContent = `${count} reporte${count !== 1 ? 's' : ''}`;
         }
 
-        // Función para obtener la etiqueta del tipo
+        // Obtener etiqueta del tipo
         function getTypeLabel(type) {
             const labels = {
                 'basura_acumulada': '🗑️ Basura Acumulada',
@@ -831,21 +815,19 @@
             return labels[type] || type;
         }
 
-        // Función para eliminar un reporte
+        // Eliminar reporte
         function deleteReport(index) {
             const report = reports[index];
             
-            // Eliminar el marcador del mapa
             if (report.marker) {
                 markerClusterGroup.removeLayer(report.marker);
             }
 
-            // Eliminar de la lista
             reports.splice(index, 1);
             renderReports();
         }
 
-        // Manejar el envío del formulario
+        // Manejar envío del formulario
         const form = document.getElementById('reportForm');
         const successMessage = document.getElementById('successMessage');
         const mapInstruction = document.getElementById('mapInstruction');
@@ -853,7 +835,6 @@
         form.addEventListener('submit', function(e) {
             e.preventDefault();
 
-            // Validar que haya una ubicación seleccionada
             if (selectedLat === null || selectedLng === null) {
                 mapInstruction.style.display = 'block';
                 return;
@@ -862,13 +843,12 @@
             const problemType = document.getElementById('problemType').value;
             const description = document.getElementById('description').value;
 
-            // Crear circleMarker permanente con color según el tipo
-            const reportMarker = createCircleMarker(selectedLat, selectedLng, problemType);
+            // Crear marcador permanente (sin interactividad)
+            const reportMarker = createCircleMarker(selectedLat, selectedLng, problemType, false);
             markerClusterGroup.addLayer(reportMarker);
 
             reportMarker.bindPopup(`<strong>${getTypeLabel(problemType)}</strong><br>${description}`);
 
-            // Obtener fecha y hora actual
             const now = new Date();
             const dateString = now.toLocaleString('es-CO', {
                 year: 'numeric',
@@ -878,7 +858,6 @@
                 minute: '2-digit'
             });
 
-            // Crear objeto del reporte
             const report = {
                 id: ++reportCounter,
                 type: problemType,
@@ -889,65 +868,46 @@
                 marker: reportMarker
             };
 
-            // Asociar datos del reporte al marcador
             reportMarker.reportData = report;
-
-            // Agregar a la lista de reportes
             reports.push(report);
-
-            // Renderizar los reportes
             renderReports();
 
-            // Mostrar mensaje de éxito
             successMessage.style.display = 'block';
             
-            // Eliminar el marcador temporal de selección
             if (selectedMarker !== null) {
                 map.removeLayer(selectedMarker);
                 selectedMarker = null;
             }
 
-            // Resetear las coordenadas seleccionadas
             selectedLat = null;
             selectedLng = null;
             document.getElementById('coordinatesDisplay').textContent = 'Haz clic en el mapa para seleccionar una ubicación';
             document.getElementById('coordinatesDisplay').classList.remove('active');
 
-            // Limpiar el formulario
             form.reset();
             mapInstruction.style.display = 'none';
 
-            // Ocultar el mensaje después de 4 segundos
             setTimeout(() => {
                 successMessage.style.display = 'none';
             }, 4000);
         });
 
-        // Limpiar el formulario
         form.addEventListener('reset', function() {
             mapInstruction.style.display = 'none';
         });
 
-        // Manejar los botones de filtro
+        // Manejar filtros
         const filterButtons = document.querySelectorAll('.filter-btn');
         filterButtons.forEach(button => {
             button.addEventListener('click', function() {
-                // Remover clase active de todos los botones
                 filterButtons.forEach(btn => btn.classList.remove('active'));
-                
-                // Agregar clase active al botón clickeado
                 this.classList.add('active');
-
-                // Actualizar filtro actual
                 currentFilter = this.getAttribute('data-filter');
-
-                // Actualizar vista
                 renderReports();
                 updateMapFilter();
             });
         });
 
-        // Inicializar la lista de reportes vacía
         renderReports();
     </script>
 </body>
