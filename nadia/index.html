@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seguridad Ciudadana - Duitama</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #001f3f 0%, #003d82 100%);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+            border-bottom: 3px solid #0055cc;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            color: #ffffff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            letter-spacing: 1px;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+        
+        #map {
+            height: 500px;
+            border-radius: 8px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            border: 3px solid #0055cc;
+        }
+        
+        .form-section {
+            background: linear-gradient(135deg, #003d82 0%, #004ba3 100%);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            border: 2px solid #0055cc;
+        }
+        
+        .form-section h2 {
+            margin-bottom: 20px;
+            color: #ffffff;
+            font-size: 1.8em;
+            border-bottom: 2px solid #0055cc;
+            padding-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #e0e0e0;
+            font-size: 0.95em;
+        }
+        
+        input[type="text"],
+        input[type="email"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #0055cc;
+            border-radius: 5px;
+            font-size: 1em;
+            background-color: #f0f4f8;
+            color: #001f3f;
+            transition: all 0.3s ease;
+        }
+        
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            background-color: #ffffff;
+            border-color: #0099ff;
+            box-shadow: 0 0 8px rgba(0, 153, 255, 0.5);
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #0055cc 0%, #0077ff 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 85, 204, 0.4);
+        }
+        
+        button:hover {
+            background: linear-gradient(135deg, #0099ff 0%, #00aaff 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 153, 255, 0.6);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .success-message {
+            display: none;
+            background-color: #00aa44;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            border-left: 4px solid #00dd66;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            #map {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛡️ Seguridad Ciudadana - Duitama</h1>
+        </header>
+        
+        <div class="content">
+            <!-- Mapa -->
+            <div id="map"></div>
+            
+            <!-- Formulario -->
+            <div class="form-section">
+                <h2>Reporte de Incidente</h2>
+                <div class="success-message" id="successMessage">
+                    ✓ Reporte enviado exitosamente. Gracias por colaborar.
+                </div>
+                
+                <form id="incidentForm">
+                    <div class="form-group">
+                        <label for="incidentType">Tipo de Incidente:</label>
+                        <select id="incidentType" name="incidentType" required>
+                            <option value="">-- Selecciona una opción --</option>
+                            <option value="robo">Robo</option>
+                            <option value="acoso">Acoso</option>
+                            <option value="pelea">Pelea</option>
+                            <option value="zona-oscura">Zona Oscura</option>
+                            <option value="otro">Otro</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="time">Hora Aproximada:</label>
+                        <select id="time" name="time" required>
+                            <option value="">-- Selecciona una opción --</option>
+                            <option value="manana">Mañana (6:00 - 12:00)</option>
+                            <option value="tarde">Tarde (12:00 - 18:00)</option>
+                            <option value="noche">Noche (18:00 - 23:59)</option>
+                            <option value="madrugada">Madrugada (00:00 - 6:00)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description">Descripción del Incidente:</label>
+                        <textarea id="description" name="description" placeholder="Describe lo que sucedió..." required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="name">Tu Nombre (Opcional):</label>
+                        <input type="text" id="name" name="name" placeholder="Nombre completo">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="phone">Tu Teléfono (Opcional):</label>
+                        <input type="text" id="phone" name="phone" placeholder="Teléfono de contacto">
+                    </div>
+                    
+                    <button type="submit">📤 Enviar Reporte</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        // Inicializar el mapa centrado en Duitama, Colombia
+        const map = L.map('map').setView([5.8268, -73.0333], 13);
+        
+        // Añadir capa de OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors',
+            className: 'map-tiles'
+        }).addTo(map);
+        
+        // Marcador en Duitama
+        const marker = L.marker([5.8268, -73.0333], {
+            icon: L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            })
+        }).addTo(map);
+        
+        marker.bindPopup('<b>Duitama, Boyacá</b><br>Latitud: 5.8268<br>Longitud: -73.0333').openPopup();
+        
+        // Permitir hacer clic en el mapa para obtener coordenadas
+        let selectedLatLng = null;
+        map.on('click', function(e) {
+            selectedLatLng = e.latlng;
+            
+            // Remover marcador anterior si existe
+            if (window.userMarker) {
+                map.removeLayer(window.userMarker);
+            }
+            
+            // Añadir nuevo marcador
+            window.userMarker = L.marker(selectedLatLng, {
+                icon: L.icon({
+                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34],
+                    shadowSize: [41, 41]
+                })
+            }).addTo(map);
+            
+            window.userMarker.bindPopup(`<b>Ubicación Seleccionada</b><br>Lat: ${selectedLatLng.lat.toFixed(4)}<br>Lng: ${selectedLatLng.lng.toFixed(4)}`).openPopup();
+        });
+        
+        // Manejo del formulario
+        document.getElementById('incidentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Recopilar datos del formulario
+            const formData = {
+                tipo: document.getElementById('incidentType').value,
+                hora: document.getElementById('time').value,
+                descripcion: document.getElementById('description').value,
+                nombre: document.getElementById('name').value || 'Anónimo',
+                telefono: document.getElementById('phone').value || 'No proporcionado',
+                ubicacion: selectedLatLng ? {
+                    lat: selectedLatLng.lat,
+                    lng: selectedLatLng.lng
+                } : 'No seleccionada',
+                fecha: new Date().toLocaleString('es-CO')
+            };
+            
+            // Guardar en localStorage
+            let reportes = JSON.parse(localStorage.getItem('reportes')) || [];
+            reportes.push(formData);
+            localStorage.setItem('reportes', JSON.stringify(reportes));
+            
+            console.log('Reporte guardado:', formData);
+            
+            // Mostrar mensaje de éxito
+            const successMessage = document.getElementById('successMessage');
+            successMessage.style.display = 'block';
+            
+            // Limpiar formulario
+            document.getElementById('incidentForm').reset();
+            window.userMarker = null;
+            
+            // Ocultar mensaje después de 5 segundos
+            setTimeout(function() {
+                successMessage.style.display = 'none';
+            }, 5000);
+        });
+    </script>
+</body>
+</html>
