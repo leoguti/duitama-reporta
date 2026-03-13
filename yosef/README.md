@@ -46,10 +46,23 @@ Agrega arriba del mapa un panel con estadísticas: total de reportes, cuántos s
 ```
 
 ### Paso 3 - Sube tu código
-1. Ve a tu carpeta `yosef/` en el repo `duitama-reporta`
-2. Crea un archivo `index.html`
-3. Pega todo el código que generó Copilot
-4. Haz commit
+1. Ve al repo **duitama-reporta** en GitHub: https://github.com/leoguti/duitama-reporta
+2. Primero acepta la invitación si no lo has hecho (te aparece un banner amarillo arriba)
+3. Entra a tu carpeta
+4. Haz clic en **Add file** → **Create new file**
+5. En el nombre del archivo escribe: `index.html`
+6. Pega todo el código que generó Copilot
+7. Abajo haz clic en el botón verde **Commit changes**
 
-### Paso 4 - Verifica
-Abre tu página en GitHub Pages y revisa que funcione el mapa, el formulario y los marcadores con colores.
+### Paso 4 - Ver tu página en internet
+Tu página ya está publicada en GitHub Pages. Para verla:
+
+1. Ve a: **https://leoguti.github.io/duitama-reporta/TU-CARPETA/**
+2. Si no carga, espera 1-2 minutos y recarga la página (F5)
+3. Si sale error 404, revisa que tu archivo se llame exactamente `index.html` (todo en minúsculas)
+
+**Tu link directo es:**
+https://leoguti.github.io/duitama-reporta/yosef/
+
+### Paso 5 - Verifica
+Abre tu link y revisa que funcione el mapa, el formulario y los marcadores con colores.
