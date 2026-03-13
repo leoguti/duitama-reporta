@@ -86,6 +86,11 @@
             background-color: #3498db;
         }
 
+        .icon-amarillo {
+            background-color: #f1c40f;
+            border: 2px solid #000;
+        }
+
         .filter-section {
             background-color: white;
             padding: 15px 20px;
@@ -536,6 +541,10 @@
                 <div class="legend-icon icon-azul">❌</div>
                 <span>Falta Caneca</span>
             </div>
+            <div class="legend-item">
+                <div class="legend-icon icon-amarillo"></div>
+                <span>Ubicación Temporal</span>
+            </div>
         </div>
 
         <div class="filter-section">
@@ -634,34 +643,17 @@
             }
         };
 
-        // Función para crear un icono personalizado SVG
-        function createColorMarker(color, icon) {
-            const svg = `
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 40" width="32" height="40">
-                    <path d="M16 0C9.4 0 4 5.4 4 12c0 7 12 28 12 28s12-21 12-28c0-6.6-5.4-12-12-12z" fill="${color}"/>
-                    <text x="16" y="18" font-size="18" text-anchor="middle" dominant-baseline="central" fill="white" font-weight="bold">${icon}</text>
-                </svg>
-            `;
-
-            const encodedSvg = encodeURIComponent(svg);
-            return `data:image/svg+xml,${encodedSvg}`;
-        }
-
-        // Función para crear marcador con icono personalizado
-        function createMarker(lat, lng, type) {
+        // Función para crear un circleMarker con color según el tipo
+        function createCircleMarker(lat, lng, type) {
             const colorInfo = problemColors[type];
-            const iconUrl = createColorMarker(colorInfo.color, colorInfo.icon);
-
-            return L.marker([lat, lng], {
-                icon: L.icon({
-                    iconUrl: iconUrl,
-                    iconSize: [32, 40],
-                    iconAnchor: [16, 40],
-                    popupAnchor: [0, -40],
-                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                    shadowSize: [41, 41],
-                    shadowAnchor: [13, 41]
-                })
+            
+            return L.circleMarker([lat, lng], {
+                radius: 10,
+                fillColor: colorInfo.color,
+                color: '#000',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8
             });
         }
 
@@ -678,16 +670,14 @@
         markerClusterGroup = L.markerClusterGroup();
         map.addLayer(markerClusterGroup);
 
-        // Marcador de referencia en el centro de Duitama (verde)
-        const centerMarker = L.marker([5.8268, -73.0333], {
-            icon: L.icon({
-                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34],
-                shadowSize: [41, 41]
-            })
+        // Marcador de referencia en el centro de Duitama (círculo verde)
+        const centerMarker = L.circleMarker([5.8268, -73.0333], {
+            radius: 12,
+            fillColor: '#27ae60',
+            color: '#000',
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.8
         }).addTo(map);
 
         centerMarker.bindPopup('<strong>Duitama, Colombia</strong><br>Centro de la ciudad').openPopup();
@@ -714,16 +704,14 @@
                 map.removeLayer(selectedMarker);
             }
 
-            // Crear nuevo marcador en la ubicación seleccionada (amarillo)
-            selectedMarker = L.marker([lat, lng], {
-                icon: L.icon({
-                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-yellow.png',
-                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                    iconSize: [25, 41],
-                    iconAnchor: [12, 41],
-                    popupAnchor: [1, -34],
-                    shadowSize: [41, 41]
-                })
+            // Crear nuevo círculo marcador en la ubicación seleccionada (amarillo)
+            selectedMarker = L.circleMarker([lat, lng], {
+                radius: 10,
+                fillColor: '#f1c40f',
+                color: '#000',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8
             }).addTo(map);
 
             selectedMarker.bindPopup(`<strong>Ubicación seleccionada</strong><br>Lat: ${lat.toFixed(4)}<br>Lng: ${lng.toFixed(4)}`).openPopup();
@@ -839,8 +827,8 @@
             const problemType = document.getElementById('problemType').value;
             const description = document.getElementById('description').value;
 
-            // Crear marcador permanente con color según el tipo
-            const reportMarker = createMarker(selectedLat, selectedLng, problemType);
+            // Crear circleMarker permanente con color según el tipo
+            const reportMarker = createCircleMarker(selectedLat, selectedLng, problemType);
             markerClusterGroup.addLayer(reportMarker);
 
             reportMarker.bindPopup(`<strong>${getTypeLabel(problemType)}</strong><br>${description}`);
