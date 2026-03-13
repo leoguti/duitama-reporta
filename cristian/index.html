@@ -87,11 +87,6 @@
             border: 2px solid #000;
         }
 
-        .icon-verde {
-            background-color: #27ae60;
-            border: 2px solid #000;
-        }
-
         .filter-section {
             background-color: white;
             padding: 15px 20px;
@@ -132,36 +127,18 @@
             border-color: #27ae60;
         }
 
-        .filter-btn.tipo-basura {
-            border-color: #e74c3c;
-            color: #e74c3c;
-        }
-
         .filter-btn.tipo-basura.active {
             background-color: #e74c3c;
-            color: white;
             border-color: #e74c3c;
-        }
-
-        .filter-btn.tipo-caneca {
-            border-color: #e67e22;
-            color: #e67e22;
         }
 
         .filter-btn.tipo-caneca.active {
             background-color: #e67e22;
-            color: white;
             border-color: #e67e22;
-        }
-
-        .filter-btn.tipo-falta {
-            border-color: #3498db;
-            color: #3498db;
         }
 
         .filter-btn.tipo-falta.active {
             background-color: #3498db;
-            color: white;
             border-color: #3498db;
         }
 
@@ -238,7 +215,7 @@
             font-size: 0.95em;
         }
 
-        select, textarea, input[type="text"] {
+        select, textarea {
             padding: 12px;
             border: 2px solid #d5e8d4;
             border-radius: 6px;
@@ -247,7 +224,7 @@
             transition: border-color 0.3s ease;
         }
 
-        select:focus, textarea:focus, input[type="text"]:focus {
+        select:focus, textarea:focus {
             outline: none;
             border-color: #27ae60;
             box-shadow: 0 0 8px rgba(39, 174, 96, 0.2);
@@ -496,10 +473,6 @@
                 <div class="legend-icon icon-amarillo"></div>
                 <span>Ubicación Temporal</span>
             </div>
-            <div class="legend-item">
-                <div class="legend-icon icon-verde"></div>
-                <span>Centro Duitama</span>
-            </div>
         </div>
 
         <div class="filter-section">
@@ -567,7 +540,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     
     <script>
-        // Variables globales
+        // Variables
+        let map;
         let selectedMarker = null;
         let selectedLat = null;
         let selectedLng = null;
@@ -576,74 +550,153 @@
         let reportMarkers = [];
         let currentFilter = 'todos';
 
-        // Colores por tipo
         const problemColors = {
-            'basura_acumulada': {
-                color: '#e74c3c',
-                cardClass: 'tipo-basura'
-            },
-            'caneca_danada': {
-                color: '#e67e22',
-                cardClass: 'tipo-caneca'
-            },
-            'falta_caneca': {
-                color: '#3498db',
-                cardClass: 'tipo-falta'
-            }
+            'basura_acumulada': { color: '#e74c3c', cardClass: 'tipo-basura' },
+            'caneca_danada': { color: '#e67e22', cardClass: 'tipo-caneca' },
+            'falta_caneca': { color: '#3498db', cardClass: 'tipo-falta' }
         };
 
-        // Inicializar mapa
-        const map = L.map('map').setView([5.8268, -73.0333], 13);
+        // Inicializar después de que el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            // Crear mapa
+            map = L.map('map').setView([5.8268, -73.0333], 13);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors',
-            maxZoom: 19
-        }).addTo(map);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
 
-        // Centro de Duitama (sin interactividad)
-        L.circleMarker([5.8268, -73.0333], {
-            radius: 12,
-            fillColor: '#27ae60',
-            color: '#000',
-            weight: 2,
-            fillOpacity: 0.85,
-            interactive: false
-        }).addTo(map);
-
-        // MANEJADOR DE CLIC DEL MAPA
-        map.on('click', function(e) {
-            const lat = e.latlng.lat;
-            const lng = e.latlng.lng;
-
-            // Eliminar marcador anterior
-            if (selectedMarker !== null) {
-                map.removeLayer(selectedMarker);
-            }
-
-            // Crear nuevo marcador amarillo
-            selectedMarker = L.circleMarker([lat, lng], {
-                radius: 10,
-                fillColor: '#f1c40f',
+            // Centro (sin eventos)
+            const centerCircle = L.circleMarker([5.8268, -73.0333], {
+                radius: 12,
+                fillColor: '#27ae60',
                 color: '#000',
                 weight: 2,
                 fillOpacity: 0.85,
                 interactive: false
-            }).addTo(map);
+            });
+            centerCircle.addTo(map);
 
-            // Actualizar coordenadas
-            selectedLat = lat;
-            selectedLng = lng;
-            const coordinatesDisplay = document.getElementById('coordinatesDisplay');
-            coordinatesDisplay.textContent = `📍 Ubicación seleccionada: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-            coordinatesDisplay.classList.add('active');
-            document.getElementById('mapInstruction').style.display = 'none';
+            // EVENTO DE CLIC - AQUÍ ES LO IMPORTANTE
+            map.addEventListener('click', function(e) {
+                console.log('Clic detectado', e.latlng);
+                
+                const lat = e.latlng.lat;
+                const lng = e.latlng.lng;
+
+                // Eliminar anterior
+                if (selectedMarker) {
+                    map.removeLayer(selectedMarker);
+                }
+
+                // Crear nuevo
+                selectedMarker = L.circleMarker([lat, lng], {
+                    radius: 10,
+                    fillColor: '#f1c40f',
+                    color: '#000',
+                    weight: 2,
+                    fillOpacity: 0.85,
+                    interactive: false
+                });
+                selectedMarker.addTo(map);
+
+                // Guardar coordenadas
+                selectedLat = lat;
+                selectedLng = lng;
+
+                // Actualizar UI
+                const coordDisplay = document.getElementById('coordinatesDisplay');
+                coordDisplay.textContent = `📍 Ubicación seleccionada: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                coordDisplay.classList.add('active');
+                document.getElementById('mapInstruction').style.display = 'none';
+
+                console.log('Marcador creado en:', lat, lng);
+            });
+
+            // Formulario
+            const form = document.getElementById('reportForm');
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                if (selectedLat === null || selectedLng === null) {
+                    document.getElementById('mapInstruction').style.display = 'block';
+                    return;
+                }
+
+                const problemType = document.getElementById('problemType').value;
+                const description = document.getElementById('description').value;
+
+                // Crear marcador en el mapa
+                const colorInfo = problemColors[problemType];
+                const reportMarker = L.circleMarker([selectedLat, selectedLng], {
+                    radius: 10,
+                    fillColor: colorInfo.color,
+                    color: '#000',
+                    weight: 2,
+                    fillOpacity: 0.85,
+                    interactive: false
+                });
+                reportMarker.addTo(map);
+
+                const now = new Date();
+                const dateString = now.toLocaleString('es-CO', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                const report = {
+                    id: ++reportCounter,
+                    type: problemType,
+                    description: description,
+                    lat: selectedLat,
+                    lng: selectedLng,
+                    date: dateString
+                };
+
+                reports.push(report);
+                reportMarkers.push(reportMarker);
+                renderReports();
+
+                document.getElementById('successMessage').style.display = 'block';
+
+                if (selectedMarker) {
+                    map.removeLayer(selectedMarker);
+                    selectedMarker = null;
+                }
+
+                selectedLat = null;
+                selectedLng = null;
+                document.getElementById('coordinatesDisplay').textContent = 'Haz clic en el mapa para seleccionar una ubicación';
+                document.getElementById('coordinatesDisplay').classList.remove('active');
+
+                form.reset();
+
+                setTimeout(() => {
+                    document.getElementById('successMessage').style.display = 'none';
+                }, 4000);
+            });
+
+            // Filtros
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentFilter = this.getAttribute('data-filter');
+                    renderReports();
+                    updateMapFilter();
+                });
+            });
+
+            renderReports();
         });
 
-        // Renderizar reportes
         function renderReports() {
             const reportsList = document.getElementById('reportsList');
             const emptyReports = document.getElementById('emptyReports');
-            
+
             if (reports.length === 0) {
                 reportsList.innerHTML = '';
                 emptyReports.style.display = 'block';
@@ -654,14 +707,13 @@
             emptyReports.style.display = 'none';
             reportsList.innerHTML = reports.map((report, index) => {
                 const colorInfo = problemColors[report.type];
-                const typeClass = colorInfo.cardClass === 'tipo-basura' ? 'basura-acumulada' : 
+                const typeClass = colorInfo.cardClass === 'tipo-basura' ? 'basura-acumulada' :
                                  colorInfo.cardClass === 'tipo-caneca' ? 'caneca-danada' : 'falta-caneca';
-                
+
                 const shouldHide = currentFilter !== 'todos' && report.type !== currentFilter;
-                const hiddenClass = shouldHide ? 'hidden' : '';
 
                 return `
-                    <div class="report-card ${colorInfo.cardClass} ${hiddenClass}">
+                    <div class="report-card ${colorInfo.cardClass} ${shouldHide ? 'hidden' : ''}">
                         <div class="report-card-header">
                             <span class="report-type ${typeClass}">${getTypeLabel(report.type)}</span>
                             <span class="report-number">#${report.id}</span>
@@ -680,14 +732,8 @@
         }
 
         function updateFilterCount() {
-            const filterCount = document.getElementById('filterCount');
-            let count = reports.length;
-
-            if (currentFilter !== 'todos') {
-                count = reports.filter(r => r.type === currentFilter).length;
-            }
-
-            filterCount.textContent = `${count} reporte${count !== 1 ? 's' : ''}`;
+            const count = currentFilter === 'todos' ? reports.length : reports.filter(r => r.type === currentFilter).length;
+            document.getElementById('filterCount').textContent = `${count} reporte${count !== 1 ? 's' : ''}`;
         }
 
         function getTypeLabel(type) {
@@ -696,14 +742,11 @@
                 'caneca_danada': '💔 Caneca Dañada',
                 'falta_caneca': '❌ Falta Caneca'
             };
-            return labels[type] || type;
+            return labels[type];
         }
 
         function deleteReport(index) {
-            const marker = reportMarkers[index];
-            if (marker) {
-                map.removeLayer(marker);
-            }
+            map.removeLayer(reportMarkers[index]);
             reports.splice(index, 1);
             reportMarkers.splice(index, 1);
             renderReports();
@@ -712,100 +755,10 @@
 
         function updateMapFilter() {
             reportMarkers.forEach((marker, index) => {
-                if (currentFilter === 'todos' || reports[index].type === currentFilter) {
-                    marker.setStyle({ opacity: 1, fillOpacity: 0.85 });
-                } else {
-                    marker.setStyle({ opacity: 0.2, fillOpacity: 0.1 });
-                }
+                const show = currentFilter === 'todos' || reports[index].type === currentFilter;
+                marker.setStyle({ opacity: show ? 1 : 0.2, fillOpacity: show ? 0.85 : 0.1 });
             });
         }
-
-        // Envío del formulario
-        const form = document.getElementById('reportForm');
-        const successMessage = document.getElementById('successMessage');
-        const mapInstruction = document.getElementById('mapInstruction');
-
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            if (selectedLat === null || selectedLng === null) {
-                mapInstruction.style.display = 'block';
-                return;
-            }
-
-            const problemType = document.getElementById('problemType').value;
-            const description = document.getElementById('description').value;
-
-            // Crear marcador del reporte (sin interactividad)
-            const colorInfo = problemColors[problemType];
-            const reportMarker = L.circleMarker([selectedLat, selectedLng], {
-                radius: 10,
-                fillColor: colorInfo.color,
-                color: '#000',
-                weight: 2,
-                fillOpacity: 0.85,
-                interactive: false
-            }).addTo(map);
-
-            const now = new Date();
-            const dateString = now.toLocaleString('es-CO', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-
-            const report = {
-                id: ++reportCounter,
-                type: problemType,
-                description: description,
-                lat: selectedLat,
-                lng: selectedLng,
-                date: dateString
-            };
-
-            reports.push(report);
-            reportMarkers.push(reportMarker);
-            renderReports();
-
-            successMessage.style.display = 'block';
-            
-            if (selectedMarker !== null) {
-                map.removeLayer(selectedMarker);
-                selectedMarker = null;
-            }
-
-            selectedLat = null;
-            selectedLng = null;
-            document.getElementById('coordinatesDisplay').textContent = 'Haz clic en el mapa para seleccionar una ubicación';
-            document.getElementById('coordinatesDisplay').classList.remove('active');
-
-            form.reset();
-            mapInstruction.style.display = 'none';
-
-            setTimeout(() => {
-                successMessage.style.display = 'none';
-            }, 4000);
-        });
-
-        form.addEventListener('reset', function() {
-            mapInstruction.style.display = 'none';
-        });
-
-        // Filtros
-        const filterButtons = document.querySelectorAll('.filter-btn');
-        filterButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                filterButtons.forEach(btn => btn.classList.remove('active'));
-                this.classList.add('active');
-                currentFilter = this.getAttribute('data-filter');
-                renderReports();
-                updateMapFilter();
-            });
-        });
-
-        renderReports();
     </script>
 </body>
 </html>
