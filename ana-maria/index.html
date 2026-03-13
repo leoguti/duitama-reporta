@@ -8,23 +8,28 @@
 
 <title>Cruces Férreos Peligrosos - Duitama</title>
 
-<!-- Leaflet CSS -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<!-- CSS -->
+<link rel="stylesheet" href="styles.css">
 
-<!-- Estilos del proyecto -->
-<link rel="stylesheet" href="css/styles.css">
+<!-- Leaflet CSS -->
+<link rel="stylesheet"
+href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
 
 </head>
 
-
 <body>
+
+<!-- ========================= -->
+<!-- ENCABEZADO -->
+<!-- ========================= -->
 
 <header>
 
 <h1>Cruces Férreos Peligrosos - Duitama</h1>
 
 <p>
-La vía del tren divide nuestra ciudad.  
+La vía del tren divide nuestra ciudad.
 Estos son los cruces que necesitan atención.
 </p>
 
@@ -32,28 +37,35 @@ Estos son los cruces que necesitan atención.
 
 
 
-<!-- PANEL DE RESUMEN -->
+<!-- ========================= -->
+<!-- PANEL RESUMEN -->
+<!-- ========================= -->
 
 <section id="panelResumen">
 
 <div class="estadistica">
-Total de cruces: <span id="totalCruces">0</span>
+Total de cruces registrados:
+<span id="totalCruces">0</span>
 </div>
 
 <div class="estadistica">
-Riesgo alto o crítico: <span id="riesgoAlto">0</span>
+Cruces de riesgo alto o crítico:
+<span id="riesgoAlto">0</span>
 </div>
 
 <div class="estadistica">
-Sin señalización: <span id="sinSenal">0</span>
+Cruces sin señalización:
+<span id="sinSenal">0</span>
 </div>
 
 <div class="estadistica">
-Sin barrera: <span id="sinBarrera">0</span>
+Cruces sin barrera:
+<span id="sinBarrera">0</span>
 </div>
 
 <div class="estadistica">
-Accidentes reportados: <span id="conAccidentes">0</span>
+Cruces con accidentes reportados:
+<span id="conAccidentes">0</span>
 </div>
 
 <div id="alertaCritica"></div>
@@ -62,37 +74,36 @@ Accidentes reportados: <span id="conAccidentes">0</span>
 
 
 
+<!-- ========================= -->
 <!-- MAPA -->
+<!-- ========================= -->
 
-<section id="mapaContainer">
+<div id="mapaContainer">
 
 <div id="map"></div>
 
-<div id="coords">
+<p id="coords">
 Ubicación del cruce: Haz clic en el mapa
+</p>
+
 </div>
 
-</section>
 
 
-
+<!-- ========================= -->
 <!-- FORMULARIO -->
+<!-- ========================= -->
 
 <section class="form-container">
 
-<h2>Registrar estado de un cruce</h2>
+<h2>Registrar cruce ferroviario</h2>
 
 <form id="formCruce">
 
-<input type="hidden" id="lat">
-<input type="hidden" id="lng">
+<label>Nombre del cruce o calle</label>
+<input id="nombre" required>
 
-<label for="nombre">Nombre del cruce o calle</label>
-<input type="text" id="nombre" required>
-
-
-
-<label for="senalizacion">Tiene señalización</label>
+<label>¿Tiene señalización?</label>
 <select id="senalizacion">
 
 <option value="sí">Sí</option>
@@ -102,8 +113,7 @@ Ubicación del cruce: Haz clic en el mapa
 </select>
 
 
-
-<label for="barrera">Tiene barrera</label>
+<label>¿Tiene barrera?</label>
 <select id="barrera">
 
 <option value="sí">Sí</option>
@@ -113,8 +123,7 @@ Ubicación del cruce: Haz clic en el mapa
 </select>
 
 
-
-<label for="riesgo">Nivel de riesgo</label>
+<label>Nivel de riesgo</label>
 <select id="riesgo">
 
 <option value="bajo">Bajo</option>
@@ -125,8 +134,7 @@ Ubicación del cruce: Haz clic en el mapa
 </select>
 
 
-
-<label for="accidentes">¿Ha habido accidentes?</label>
+<label>¿Ha habido accidentes?</label>
 <select id="accidentes">
 
 <option value="sí">Sí</option>
@@ -136,18 +144,17 @@ Ubicación del cruce: Haz clic en el mapa
 </select>
 
 
-
-<label for="descripcion">Descripción</label>
-
-<textarea
-id="descripcion"
-placeholder="Describe la situación del cruce, visibilidad, tráfico, problemas..."
-></textarea>
+<label>Descripción</label>
+<textarea id="descripcion"></textarea>
 
 
+<!-- coordenadas ocultas -->
+
+<input type="hidden" id="lat">
+<input type="hidden" id="lng">
 
 <button type="submit">
-Enviar reporte
+Registrar cruce
 </button>
 
 </form>
@@ -156,11 +163,13 @@ Enviar reporte
 
 
 
-<!-- LISTA DE CRUCES REPORTADOS -->
+<!-- ========================= -->
+<!-- LISTA DE CRUCES -->
+<!-- ========================= -->
 
 <section id="listaCrucesContainer">
 
-<h2>Cruces reportados</h2>
+<h2>Cruces registrados</h2>
 
 <div id="listaCruces"></div>
 
@@ -168,16 +177,18 @@ Enviar reporte
 
 
 
-<!-- LIBRERÍA LEAFLET -->
+<!-- ========================= -->
+<!-- LEAFLET JS -->
+<!-- ========================= -->
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script
+src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+</script>
 
 
+<!-- SCRIPT PRINCIPAL -->
 
-<!-- SCRIPT DEL PROYECTO -->
-
-<script src="js/script.js"></script>
-
+<script src="script.js"></script>
 
 
 </body>
