@@ -853,3 +853,185 @@
             color: #b0b0b0;
             font-size: 0.9em;
             margin-bottom:*
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seguridad Ciudadana - Duitama</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #001f3f 0%, #003d82 100%);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+            border-bottom: 3px solid #0055cc;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            color: #ffffff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            letter-spacing: 1px;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+        
+        .map-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        #map {
+            height: 500px;
+            border-radius: 8px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            border: 3px solid #0055cc;
+            cursor: crosshair;
+        }
+        
+        .legend {
+            background: linear-gradient(135deg, #003d82 0%, #004ba3 100%);
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #0055cc;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .legend h4 {
+            color: #ffffff;
+            margin-bottom: 12px;
+            font-size: 0.95em;
+            text-transform: uppercase;
+            border-bottom: 2px solid #0055cc;
+            padding-bottom: 8px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            color: #e0e0e0;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid rgba(0, 0, 0, 0.3);
+            flex-shrink: 0;
+        }
+        
+        .coordinates-display {
+            background: linear-gradient(135deg, #003d82 0%, #004ba3 100%);
+            padding: 15px 20px;
+            border-radius: 8px;
+            border: 2px solid #0055cc;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #e0e0e0;
+        }
+        
+        .coordinates-display .label {
+            color: #b0b0b0;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        
+        .coordinates-display .coords {
+            color: #00ff88;
+            font-family: 'Courier New', monospace;
+            font-size: 1.15em;
+            letter-spacing: 0.5px;
+        }
+        
+        .coordinates-display.no-location {
+            color: #ff6b6b;
+        }
+        
+        .coordinates-display.no-location .coords {
+            color: #ff9999;
+        }
+        
+        .form-section {
+            background: linear-gradient(135deg, #003d82 0%, #004ba3 100%);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            border: 2px solid #0055cc;
+        }
+        
+        .form-section h2 {
+            margin-bottom: 20px;
+            color: #ffffff;
+            font-size: 1.8em;
+            border-bottom: 2px solid #0055cc;
+            padding-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #e0e0e0;
+            font-size: 0.95em;
+        }
+        
+        input[type="text"],
+        input[type="email"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #0055cc;
+            border-radius: 5px;
+            font-size: 1em;
+            background-color: #f0f4f8;
+            color: #001f3f;
+            transition: all 0.3s ease;
+        }
+        
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            background-color: #ffffff;
+            border-color: #0099ff;
+            box-shadow: 0 0*
