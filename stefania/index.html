@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportes de la Calle - Duitama</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #87CEEB 0%, #E0F6FF 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #87CEEB 0%, #4A90E2 100%);
+            padding: 30px 20px;
+            text-align: center;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+        
+        .mapa-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        #mapa {
+            height: 500px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            cursor: crosshair;
+        }
+        
+        .coordenadas {
+            padding: 15px;
+            background: linear-gradient(135deg, #E0F6FF 0%, #F0FAFF 100%);
+            border: 2px solid #87CEEB;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            color: #4A90E2;
+            font-size: 1.05em;
+        }
+        
+        .coordenadas.sin-ubicacion {
+            color: #999;
+            font-style: italic;
+        }
+        
+        .leyenda-marcadores {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #87CEEB;
+            font-size: 0.9em;
+        }
+        
+        .leyenda-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .leyenda-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .leyenda-circulo {
+            border-radius: 50%;
+            border: 2px solid rgba(0, 0, 0, 0.3);
+        }
+        
+        .leyenda-circulo.verde {
+            width: 18px;
+            height: 18px;
+            background: #22c55e;
+        }
+        
+        .leyenda-circulo.amarillo {
+            width: 22px;
+            height: 22px;
+            background: #eab308;
+        }
+        
+        .leyenda-circulo.rojo {
+            width: 28px;
+            height: 28px;
+            background: #ef4444;
+        }
+        
+        .leyenda-texto {
+            color: #555;
+            font-weight: 500;
+        }
+        
+        .formulario {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .formulario h2 {
+            color: #4A90E2;
+            margin-bottom: 10px;
+            font-size: 1.5em;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+        
+        .form-group select,
+        .form-group textarea {
+            padding: 12px;
+            border: 2px solid #87CEEB;
+            border-radius: 8px;
+            font-size: 0.95em;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+        
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4A90E2;
+            box-shadow: 0 0 8px rgba(74, 144, 226, 0.3);
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 14px;
+            font-size: 1em;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-enviar {
+            background: linear-gradient(135deg, #87CEEB 0%, #4A90E2 100%);
+            color: white;
+        }
+        
+        .btn-enviar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
+        }
+        
+        .btn-enviar:active {
+            transform: translateY(0);
+        }
+        
+        .btn-limpiar {
+            background: #f0f0f0;
+            color: #333;
+            border: 2px solid #87CEEB;
+        }
+        
+        .btn-limpiar:hover {
+            background: #e8e8e8;
+        }
+        
+        .mensaje {
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+            font-weight: 500;
+        }
+        
+        .mensaje.exito {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #28a745;
+            display: block;
+        }
+        
+        .mensaje.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+            display: block;
+        }
+        
+        .reportes-container {
+            margin-top: 30px;
+            border-top: 2px solid #87CEEB;
+            padding-top: 20px;
+        }
+        
+        .reportes-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .reportes-titulo {
+            color: #4A90E2;
+            font-size: 1.3em;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .contador-total {
+            background: linear-gradient(135deg, #87CEEB 0%, #4A90E2 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.95em;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+        }
+        
+        .botones-orden {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-orden {
+            padding: 8px 14px;
+            font-size: 0.9em;
+            background: #f0f0f0;
+            color: #333;
+            border: 2px solid #87CEEB;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        
+        .btn-orden:hover {
+            background: #e8e8e8;
+            transform: translateY(-1px);
+        }
+        
+        .btn-orden.activo {
+            background: linear-gradient(135deg, #87CEEB 0%, #4A90E2 100%);
+            color: white;
+            border-color: #4A90E2;
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+        }
+        
+        .reportes-lista {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .tarjeta-reporte {
+            background: linear-gradient(135deg, #E0F6FF 0%, #F0FAFF 100%);
+            border-left: 5px solid #4A90E2;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .tarjeta-reporte:hover {
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
+            transform: translateX(5px);
+        }
+        
+        .tarjeta-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        
+        .tarjeta-tipo {
+            font-weight: 700;
+            color: #4A90E2;
+            font-size: 0.95em;
+        }
+        
+        .tarjeta-urgencia {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .urgencia-poco {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .urgencia-urgente {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .urgencia-muy {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .tarjeta-descripcion {
+            color: #555;
+            font-size: 0.95em;
+            margin: 10px 0;
+            line-height: 1.4;
+        }
+        
+        .tarjeta-coordenadas {
+            color: #888;
+            font-size: 0.85em;
+            font-family: 'Courier New', monospace;
+            background: rgba(255, 255, 255, 0.6);
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+        
+        .tarjeta-numero {
+            display: inline-block;
+            background: #4A90E2;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+        
+        .sin-reportes {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+            font-style: italic;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            #mapa {
+                height: 400px;
+            }
+            
+            .reportes-lista {
+                max-height: 300px;
+            }
+            
+            .reportes-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .botones-orden {
+                width: 100%;
+            }
+            
+            .btn-orden {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚦 Reportes de la Calle - Duitama</h1>
+            <p>Ayúdanos a mantener nuestra ciudad en mejores condiciones</p>
+        </div>
+        
+        <div class="content">
+            <div class="mapa-container">
+                <div id="mapa"></div>
+                <div class="leyenda-marcadores">
+                    <div class="leyenda-item">
+                        <div class="leyenda-circulo verde"></div>
+                        <span class="leyenda-texto">Poco Urgente</span>
+                    </div>
+                    <div class="leyenda-item">
+                        <div class="leyenda-circulo amarillo"></div>
+                        <span class="leyenda-texto">Urgente</span>
+                    </div>
+                    <div class="leyenda-item">
+                        <div class="leyenda-circulo rojo"></div>
+                        <span class="leyenda-texto">Muy Urgente (más grande)</span>
+                    </div>
+                </div>
+                <div id="coordenadas" class="coordenadas sin-ubicacion">
+                    📍 Haz clic en el mapa para seleccionar la ubicación del problema
+                </div>
+            </div>
+            
+            <div>
+                <form class="formulario" id="formularioReporte">
+                    <h2>Reportar un Problema</h2>
+                    
+                    <div class="form-group">
+                        <label for="tipoproblema">Tipo de Problema:</label>
+                        <select id="tipoproblema" name="tipoproblema" required>
+                            <option value="">-- Selecciona un tipo --</option>
+                            <option value="Semáforo Dañado">Semáforo Dañado</option>
+                            <option value="Señal Caída">Señal Caída</option>
+                            <option value="Andén Roto">Andén Roto</option>
+                            <option value="Poste de Luz Apagado">Poste de Luz Apagado</option>
+                            <option value="Alcantarilla sin Tapa">Alcantarilla sin Tapa</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="urgencia">¿Qué tan urgente es?:</label>
+                        <select id="urgencia" name="urgencia" required>
+                            <option value="">-- Selecciona la urgencia --</option>
+                            <option value="Poco Urgente">Poco Urgente</option>
+                            <option value="Urgente">Urgente</option>
+                            <option value="Muy Urgente">Muy Urgente</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="descripcion">Descripción:</label>
+                        <textarea id="descripcion" name="descripcion" placeholder="Cuéntanos más detalles sobre el problema..." required></textarea>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button type="submit" class="btn-enviar">📤 Enviar Reporte</button>
+                        <button type="reset" class="btn-limpiar">🔄 Limpiar</button>
+                    </div>
+                    
+                    <div id="mensaje" class="mensaje"></div>
+                </form>
+                
+                <div id="reportesContainer" class="reportes-container" style="display: none;">
+                    <div class="reportes-header">
+                        <div class="reportes-titulo">
+                            📋 Reportes Registrados
+                            <span class="contador-total" id="contadorReportes">0</span>
+                        </div>
+                        <div class="botones-orden">
+                            <button class="btn-orden activo" id="btnMasUrgentes">⚠️ Más Urgentes</button>
+                            <button class="btn-orden" id="btnMasRecientes">📅 Más Recientes</button>
+                        </div>
+                    </div>
+                    <div id="reportesLista" class="reportes-lista"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Leaflet JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    
+    <script>
+        // Variables globales
+        let marcadorProblema = null;
+        let coordenadasSeleccionadas = null;
+        let reportes = []; // Lista para almacenar los reportes
+        let marcadoresReportes = []; // Lista para almacenar los marcadores en el mapa
+        let ordenActual = 'urgentes'; // 'urgentes' o 'recientes'
+        
+        // Inicializar el mapa de Duitama
+        const mapa = L.map('mapa').setView([5.8268, -73.0333], 14);
+        
+        // Agregar capa de OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19,
+            minZoom: 2
+        }).addTo(mapa);
+        
+        // Agregar marcador en el centro de Duitama (solo informativo)
+        const marcadorCentro = L.marker([5.8268, -73.0333], {
+            title: 'Centro de Duitama'
+        }).addTo(mapa).bindPopup('<b>Duitama, Colombia</b><br>Coordenadas: 5.8268, -73.0333');
+        
+        // Función para crear un icono circular personalizado
+        function crearIconoCircular(color, tamano) {
+            return L.divIcon({
+                html: `<div style="
+                    width: ${tamano}px; 
+                    height: ${tamano}px; 
+                    background: ${color}; 
+                    border-radius: 50%; 
+                    border: 3px solid rgba(255,255,255,0.8);
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.5);
+                "></div>`,
+                className: 'marcador-circular',
+                iconSize: [tamano, tamano],
+                iconAnchor: [tamano / 2, tamano / 2],
+                popupAnchor: [0, -tamano / 2 - 10]
+            });
+        }
+        
+        // Función para obtener color y tamaño según urgencia
+        function obtenerColorYTamano(urgencia) {
+            switch(urgencia) {
+                case 'Poco Urgente':
+                    return { color: '#22c55e', tamano: 18 }; // Verde
+                case 'Urgente':
+                    return { color: '#eab308', tamano: 22 }; // Amarillo
+                case 'Muy Urgente':
+                    return { color: '#ef4444', tamano: 28 }; // Rojo (más grande)
+                default:
+                    return { color: '#3b82f6', tamano: 18 }; // Azul por defecto
+            }
+        }
+        
+        // Función para obtener valor numérico de urgencia (para ordenamiento)
+        function obtenerValorUrgencia(urgencia) {
+            switch(urgencia) {
+                case 'Muy Urgente':
+                    return 3;
+                case 'Urgente':
+                    return 2;
+                case 'Poco Urgente':
+                    return 1;
+                default:
+                    return 0;
+            }
+        }
+        
+        // Manejar clic en el mapa para crear/mover marcador
+        mapa.on('click', function(e) {
+            const lat = e.latlng.lat.toFixed(4);
+            const lng = e.latlng.lng.toFixed(4);
+            
+            // Si ya existe un marcador, eliminarlo
+            if (marcadorProblema !== null) {
+                mapa.removeLayer(marcadorProblema);
+            }
+            
+            // Crear nuevo marcador en la ubicación clickeada (gris para indicar que es temporal)
+            const iconoTemporal = crearIconoCircular('#9ca3af', 20);
+            marcadorProblema = L.marker([lat, lng], {
+                title: 'Ubicación del problema (temporal)',
+                icon: iconoTemporal
+            }).addTo(mapa).bindPopup(`<b>Ubicación del Problema</b><br>Latitud: ${lat}<br>Longitud: ${lng}`);
+            
+            // Guardar las coordenadas
+            coordenadasSeleccionadas = { lat: parseFloat(lat), lng: parseFloat(lng) };
+            
+            // Mostrar las coordenadas debajo del mapa
+            const elementoCoordenadas = document.getElementById('coordenadas');
+            elementoCoordenadas.textContent = `📍 Ubicación del problema: ${lat}, ${lng}`;
+            elementoCoordenadas.classList.remove('sin-ubicacion');
+            
+            // Abrir popup
+            marcadorProblema.openPopup();
+        });
+        
+        // Función para crear una tarjeta de reporte
+        function crearTarjetaReporte(reporte, numero) {
+            const urgenciaClass = reporte.urgencia === 'Poco Urgente' 
+                ? 'urgencia-poco' 
+                : reporte.urgencia === 'Urgente' 
+                ? 'urgencia-urgente' 
+                : 'urgencia-muy';
+            
+            const tarjeta = document.createElement('div');
+            tarjeta.className = 'tarjeta-reporte';
+            tarjeta.innerHTML = `
+                <div class="tarjeta-header">
+                    <div>
+                        <span class="tarjeta-numero">${numero}</span>
+                        <span class="tarjeta-tipo">${reporte.tipo}</span>
+                    </div>
+                    <span class="tarjeta-urgencia ${urgenciaClass}">${reporte.urgencia}</span>
+                </div>
+                <div class="tarjeta-descripcion">${reporte.descripcion}</div>
+                <div class="tarjeta-coordenadas">📍 ${reporte.coordenadas.lat}, ${reporte.coordenadas.lng}</div>
+            `;
+            return tarjeta;
+        }
+        
+        // Función para obtener reportes ordenados
+        function obtenerReportesOrdenados() {
+            let reportesOrdenados = [...reportes];
+            
+            if (ordenActual === 'urgentes') {
+                // Ordenar por urgencia (más urgente primero)
+                reportesOrdenados.sort((a, b) => {
+                    return obtenerValorUrgencia(b.urgencia) - obtenerValorUrgencia(a.urgencia);
+                });
+            } else {
+                // Ordenar por más recientes primero (al revés del array)
+                reportesOrdenados.reverse();
+            }
+            
+            return reportesOrdenados;
+        }
+        
+        // Función para actualizar la lista de reportes
+        function actualizarListaReportes() {
+            const container = document.getElementById('reportesContainer');
+            const lista = document.getElementById('reportesLista');
+            const contador = document.getElementById('contadorReportes');
+            
+            if (reportes.length === 0) {
+                container.style.display = 'none';
+                lista.innerHTML = '';
+                return;
+            }
+            
+            container.style.display = 'block';
+            contador.textContent = reportes.length;
+            lista.innerHTML = '';
+            
+            // Obtener reportes ordenados según la selección actual
+            const reportesOrdenados = obtenerReportesOrdenados();
+            
+            // Mostrar reportes
+            reportesOrdenados.forEach((reporte, index) => {
+                const numero = index + 1;
+                const tarjeta = crearTarjetaReporte(reporte, numero);
+                lista.appendChild(tarjeta);
+            });
+        }
+        
+        // Manejar clic en botón "Más Urgentes"
+        document.getElementById('btnMasUrgentes').addEventListener('click', function() {
+            ordenActual = 'urgentes';
+            document.getElementById('btnMasUrgentes').classList.add('activo');
+            document.getElementById('btnMasRecientes').classList.remove('activo');
+            actualizarListaReportes();
+        });
+        
+        // Manejar clic en botón "Más Recientes"
+        document.getElementById('btnMasRecientes').addEventListener('click', function() {
+            ordenActual = 'recientes';
+            document.getElementById('btnMasRecientes').classList.add('activo');
+            document.getElementById('btnMasUrgentes').classList.remove('activo');
+            actualizarListaReportes();
+        });
+        
+        // Manejar el envío del formulario
+        document.getElementById('formularioReporte').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const tipoproblema = document.getElementById('tipoproblema').value;
+            const urgencia = document.getElementById('urgencia').value;
+            const descripcion = document.getElementById('descripcion').value;
+            const mensaje = document.getElementById('mensaje');
+            
+            // Validación básica
+            if (!tipoproblema || !urgencia || !descripcion.trim()) {
+                mensaje.textContent = '❌ Por favor, completa todos los campos.';
+                mensaje.className = 'mensaje error';
+                return;
+            }
+            
+            // Validar que se haya seleccionado una ubicación en el mapa
+            if (coordenadasSeleccionadas === null) {
+                mensaje.textContent = '❌ Por favor, selecciona una ubicación haciendo clic en el mapa.';
+                mensaje.className = 'mensaje error';
+                return;
+            }
+            
+            // Crear objeto de reporte
+            const nuevoReporte = {
+                id: Date.now(),
+                tipo: tipoproblema,
+                urgencia: urgencia,
+                descripcion: descripcion,
+                coordenadas: coordenadasSeleccionadas,
+                timestamp: new Date().toLocaleString('es-CO'),
+                orden: reportes.length // Para mantener el orden original
+            };
+            
+            // Agregar reporte a la lista
+            reportes.push(nuevoReporte);
+            
+            // Obtener color y tamaño según urgencia
+            const { color, tamano } = obtenerColorYTamano(urgencia);
+            const icono = crearIconoCircular(color, tamano);
+            
+            // Crear marcador permanente en el mapa
+            const marcadorPermanente = L.marker(
+                [nuevoReporte.coordenadas.lat, nuevoReporte.coordenadas.lng],
+                {
+                    title: nuevoReporte.tipo,
+                    icon: icono
+                }
+            ).addTo(mapa).bindPopup(`
+                <b>${nuevoReporte.tipo}</b><br>
+                <strong>Urgencia:</strong> ${nuevoReporte.urgencia}<br>
+                <strong>Descripción:</strong> ${nuevoReporte.descripcion}<br>
+                <small>${nuevoReporte.timestamp}</small>
+            `);
+            
+            marcadoresReportes.push(marcadorPermanente);
+            
+            // Simular envío del formulario
+            console.log('Reporte Enviado:', nuevoReporte);
+            
+            // Mostrar mensaje de éxito
+            mensaje.textContent = '✅ ¡Reporte enviado exitosamente! Gracias por tu contribución a mejorar Duitama.';
+            mensaje.className = 'mensaje exito';
+            
+            // Actualizar lista de reportes
+            actualizarListaReportes();
+            
+            // Limpiar formulario después de 2 segundos
+            setTimeout(() => {
+                this.reset();
+                mensaje.className = 'mensaje';
+                
+                // Limpiar marcador de selección y coordenadas
+                if (marcadorProblema !== null) {
+                    mapa.removeLayer(marcadorProblema);
+                    marcadorProblema = null;
+                }
+                coordenadasSeleccionadas = null;
+                const elementoCoordenadas = document.getElementById('coordenadas');
+                elementoCoordenadas.textContent = '📍 Haz clic en el mapa para seleccionar la ubicación del problema';
+                elementoCoordenadas.classList.add('sin-ubicacion');
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
