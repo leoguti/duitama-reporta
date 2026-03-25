@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Huecos en las Vías - Duitama</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f0f0;
+        }
+
+        header {
+            background-color: #FF8C00;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .map-section {
+            flex: 0 0 50%;
+            padding: 20px;
+            background-color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .statistics-panel {
+            background: linear-gradient(135deg, #FF8C00 0%, #E67E00 100%);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .statistics-panel h3 {
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .statistics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .stat-card {
+            background-color: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-card:hover {
+            background-color: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.6);
+            transform: translateY(-3px);
+        }
+
+        .stat-number {
+            font-size: 2.2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            font-weight: 500;
+            opacity: 0.95;
+        }
+
+        .stat-icon {
+            font-size: 1.4em;
+            margin-bottom: 8px;
+        }
+
+        .stat-card.total {
+            grid-column: 1 / 2;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
+            border: 2px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .stat-card.leve {
+            border-color: #FFC107;
+            background-color: rgba(255, 193, 7, 0.2);
+        }
+
+        .stat-card.grave {
+            border-color: #FF9800;
+            background-color: rgba(255, 152, 0, 0.2);
+        }
+
+        .stat-card.peligroso {
+            border-color: #F44336;
+            background-color: rgba(244, 67, 54, 0.2);
+        }
+
+        .map-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #map {
+            flex: 1;
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border: 4px solid #FF8C00;
+        }
+
+        .coordinates-display {
+            background-color: white;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #FF8C00;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            font-size: 1.1em;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .coordinates-display.empty {
+            color: #999;
+            font-style: italic;
+        }
+
+        .legend {
+            background-color: white;
+            padding: 15px;
+            margin-top: 12px;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            font-size: 0.9em;
+        }
+
+        .legend-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #FF8C00;
+            padding-bottom: 8px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .legend-circle {
+            border-radius: 50%;
+            flex-shrink: 0;
+            border: 2px solid rgba(0, 0, 0, 0.3);
+        }
+
+        .legend-text {
+            color: #555;
+        }
+
+        .form-section {
+            flex: 0 0 50%;
+            padding: 30px;
+            background-color: #e8e8e8;
+            overflow-y: auto;
+        }
+
+        .form-container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            max-width: 600px;
+            margin: 0 auto;
+            border-left: 5px solid #FF8C00;
+        }
+
+        .form-container h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-bottom: 2px solid #FF8C00;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 1em;
+        }
+
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+            font-size: 1em;
+            font-family: inherit;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #FF8C00;
+            box-shadow: 0 0 8px rgba(255, 140, 0, 0.3);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .submit-btn {
+            background-color: #FF8C00;
+            color: white;
+        }
+
+        .submit-btn:hover {
+            background-color: #E67E00;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(255, 140, 0, 0.3);
+        }
+
+        .reset-btn {
+            background-color: #999;
+            color: white;
+        }
+
+        .reset-btn:hover {
+            background-color: #777;
+            transform: translateY(-2px);
+        }
+
+        .success-message {
+            display: none;
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            text-align: center;
+            animation: slideIn 0.3s ease-in-out;
+        }
+
+        .error-message {
+            display: none;
+            background-color: #f44336;
+            color: white;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .reports-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #FF8C00;
+        }
+
+        .reports-section h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .reports-counter {
+            background-color: #FF8C00;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .reports-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .report-card {
+            background: linear-gradient(135deg, #fff 0%, #f9f9f9 100%);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 5px solid #FF8C00;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            animation: slideIn 0.3s ease-in-out;
+        }
+
+        .report-card:hover {
+            box-shadow: 0 5px 15px rgba(255, 140, 0, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .severity-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.85em;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .severity-badge::before {
+            content: '';
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .severity-leve {
+            background-color: #FFC107;
+        }
+
+        .severity-leve::before {
+            background-color: #FFC107;
+        }
+
+        .severity-grave {
+            background-color: #FF9800;
+        }
+
+        .severity-grave::before {
+            background-color: #FF9800;
+        }
+
+        .severity-peligroso {
+            background-color: #F44336;
+        }
+
+        .severity-peligroso::before {
+            background-color: #F44336;
+        }
+
+        .report-date {
+            font-size: 0.85em;
+            color: #999;
+        }
+
+        .report-detail {
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        .report-detail-label {
+            font-weight: 600;
+            color: #333;
+            display: inline-block;
+            min-width: 100px;
+        }
+
+        .report-detail-value {
+            color: #666;
+        }
+
+        .report-description {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 0.95em;
+            color: #555;
+            border-left: 3px solid #FF8C00;
+        }
+
+        .report-coordinates {
+            font-size: 0.85em;
+            color: #FF8C00;
+            font-weight: 500;
+            margin-top: 10px;
+        }
+
+        .delete-report-btn {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .delete-report-btn:hover {
+            background-color: #d32f2f;
+            transform: scale(1.05);
+        }
+
+        .empty-reports {
+            text-align: center;
+            color: #999;
+            padding: 30px 20px;
+            font-style: italic;
+        }
+
+        /* Estilos responsive */
+        @media (max-width: 1024px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .map-section {
+                flex: 0 0 40%;
+            }
+
+            .form-section {
+                flex: 0 0 60%;
+            }
+
+            .statistics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .stat-card.total {
+                grid-column: 1 / 3;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            .form-container {
+                padding: 20px;
+            }
+
+            .map-section,
+            .form-section {
+                flex: 0 0 50%;
+                padding: 15px;
+            }
+
+            .coordinates-display {
+                padding: 10px;
+                font-size: 0.95em;
+            }
+
+            .report-card {
+                padding: 15px;
+            }
+
+            .reports-list {
+                max-height: 300px;
+            }
+
+            .legend {
+                padding: 10px;
+                font-size: 0.8em;
+            }
+
+            .statistics-panel {
+                padding: 15px;
+            }
+
+            .statistics-panel h3 {
+                font-size: 1.1em;
+            }
+
+            .statistics-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .stat-card {
+                padding: 12px;
+            }
+
+            .stat-number {
+                font-size: 1.8em;
+            }
+
+            .stat-label {
+                font-size: 0.8em;
+            }
+
+            .stat-icon {
+                font-size: 1.1em;
+            }
+
+            .stat-card.total {
+                grid-column: 1 / 3;
+            }
+        }
+
+        /* Scrollbar personalizado */
+        .reports-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .reports-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .reports-list::-webkit-scrollbar-thumb {
+            background: #FF8C00;
+            border-radius: 10px;
+        }
+
+        .reports-list::-webkit-scrollbar-thumb:hover {
+            background: #E67E00;
+        }
+
+        .map-hint {
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .stat-card.updated {
+            animation: pulse 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚧 Huecos en las Vías - Duitama 🚧</h1>
+        </header>
+
+        <div class="map-section">
+            <!-- Panel de Estadísticas -->
+            <div class="statistics-panel">
+                <h3>📊 Estadísticas de Reportes</h3>
+                <div class="statistics-grid">
+                    <div class="stat-card total">
+                        <div class="stat-icon">📍</div>
+                        <span class="stat-number" id="totalReports">0</span>
+                        <span class="stat-label">Total</span>
+                    </div>
+                    <div class="stat-card leve">
+                        <div class="stat-icon">⚠️</div>
+                        <span class="stat-number" id="leve-count">0</span>
+                        <span class="stat-label">Leve</span>
+                    </div>
+                    <div class="stat-card grave">
+                        <div class="stat-icon">⚠️⚠️</div>
+                        <span class="stat-number" id="grave-count">0</span>
+                        <span class="stat-label">Grave</span>
+                    </div>
+                    <div class="stat-card peligroso">
+                        <div class="stat-icon">🚨</div>
+                        <span class="stat-number" id="peligroso-count">0</span>
+                        <span class="stat-label">Peligroso</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="map-wrapper">
+                <div id="map"></div>
+                <div class="map-hint">Haz clic en el mapa para seleccionar la ubicación del hueco</div>
+            </div>
+            <div class="coordinates-display empty" id="coordinatesDisplay">
+                Ubicación seleccionada: Sin seleccionar
+            </div>
+            <div class="legend">
+                <div class="legend-title">📊 Leyenda</div>
+                <div class="legend-item">
+                    <div class="legend-circle" style="width: 10px; height: 10px; background-color: #FFC107;"></div>
+                    <span class="legend-text">Pequeño (Leve)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-circle" style="width: 20px; height: 20px; background-color: #FFC107;"></div>
+                    <span class="legend-text">Mediano (Leve)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-circle" style="width: 30px; height: 30px; background-color: #FFC107;"></div>
+                    <span class="legend-text">Grande (Leve)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-circle" style="width: 20px; height: 20px; background-color: #FF9800;"></div>
+                    <span class="legend-text">Grave (cualquier tamaño)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-circle" style="width: 20px; height: 20px; background-color: #F44336;"></div>
+                    <span class="legend-text">Peligroso (cualquier tamaño)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <div class="form-container">
+                <div class="success-message" id="successMessage">
+                    ✓ Reporte enviado correctamente. ¡Gracias por tu contribuci��n!
+                </div>
+                <div class="error-message" id="errorMessage">
+                    ✗ Por favor completa todos los campos.
+                </div>
+
+                <h2>Reportar un Hueco</h2>
+
+                <form id="reportForm">
+                    <div class="form-group">
+                        <label for="severity">Gravedad del Hueco *</label>
+                        <select id="severity" name="severity" required>
+                            <option value="">Selecciona la gravedad</option>
+                            <option value="leve">Leve</option>
+                            <option value="grave">Grave</option>
+                            <option value="peligroso">Peligroso</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="size">Tamaño Aproximado *</label>
+                        <select id="size" name="size" required>
+                            <option value="">Selecciona el tamaño</option>
+                            <option value="pequeño">Pequeño</option>
+                            <option value="mediano">Mediano</option>
+                            <option value="grande">Grande</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Descripción *</label>
+                        <textarea id="description" name="description" placeholder="Describe el hueco, ubicaci��n específica, calle, etc..." required></textarea>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="submit-btn">Enviar Reporte</button>
+                        <button type="reset" class="reset-btn">Limpiar Formulario</button>
+                    </div>
+                </form>
+
+                <!-- Sección de reportes -->
+                <div class="reports-section" id="reportsSection" style="display: none;">
+                    <h3>
+                        📋 Reportes Registrados
+                        <span class="reports-counter" id="reportsCounter">0</span>
+                    </h3>
+                    <div class="reports-list" id="reportsList"></div>
+                </div>
+
+                <div class="empty-reports" id="emptyReports">
+                    No hay reportes registrados aún
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+    <script>
+        // Variables globales
+        let selectedMarker = null;
+        let selectedCoordinates = null;
+        let reports = [];
+        let reportMarkers = {};
+
+        // Función para obtener el tamaño del círculo según el tamaño del hueco
+        function getCircleRadius(size) {
+            const sizes = {
+                'pequeño': 10,
+                'mediano': 20,
+                'grande': 30
+            };
+            return sizes[size] || 20;
+        }
+
+        // Función para obtener el color según la gravedad
+        function getSeverityColor(severity) {
+            const colors = {
+                'leve': '#FFC107',
+                'grave': '#FF9800',
+                'peligroso': '#F44336'
+            };
+            return colors[severity] || '#999';
+        }
+
+        // Función para crear un círculo de reporte
+        function createReportCircle(lat, lng, severity, size) {
+            const radius = getCircleRadius(size);
+            const color = getSeverityColor(severity);
+
+            const circle = L.circleMarker([lat, lng], {
+                radius: radius / 2, // Leaflet usa radio en píxeles de pantalla
+                fillColor: color,
+                color: 'rgba(0, 0, 0, 0.3)',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8
+            });
+
+            return circle;
+        }
+
+        // Función para actualizar estadísticas
+        function updateStatistics() {
+            const total = reports.length;
+            const leve = reports.filter(r => r.gravedad === 'leve').length;
+            const grave = reports.filter(r => r.gravedad === 'grave').length;
+            const peligroso = reports.filter(r => r.gravedad === 'peligroso').length;
+
+            // Actualizar los números
+            document.getElementById('totalReports').textContent = total;
+            document.getElementById('leve-count').textContent = leve;
+            document.getElementById('grave-count').textContent = grave;
+            document.getElementById('peligroso-count').textContent = peligroso;
+
+            // Agregar animación de actualización
+            const statCards = document.querySelectorAll('.stat-card');
+            statCards.forEach(card => {
+                card.classList.remove('updated');
+                // Forzar reflow para que la animación se repita
+                void card.offsetWidth;
+                card.classList.add('updated');
+            });
+        }
+
+        // Inicializar el mapa
+        const map = L.map('map').setView([5.8268, -73.0333], 13);
+
+        // Agregar capa de OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19,
+            tileSize: 256
+        }).addTo(map);
+
+        // Marcador inicial en Duitama (solo informativo)
+        const duitamaMarker = L.circleMarker([5.8268, -73.0333], {
+            radius: 8,
+            fillColor: '#999',
+            color: 'rgba(0, 0, 0, 0.3)',
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.6
+        }).addTo(map);
+
+        duitamaMarker.bindPopup('<b>Duitama, Colombia</b><br>Centro de la ciudad');
+
+        // Función para actualizar el marcador seleccionado
+        function updateSelectedMarker(lat, lng) {
+            if (selectedMarker) {
+                map.removeLayer(selectedMarker);
+            }
+
+            selectedMarker = L.circleMarker([lat, lng], {
+                radius: 10,
+                fillColor: '#FF8C00',
+                color: 'rgba(0, 0, 0, 0.5)',
+                weight: 3,
+                opacity: 1,
+                fillOpacity: 0.7,
+                dashArray: '5, 5'
+            }).addTo(map);
+
+            selectedMarker.bindPopup(`<b>Ubicación seleccionada</b><br>Lat: ${lat.toFixed(6)}<br>Lon: ${lng.toFixed(6)}`);
+            selectedMarker.openPopup();
+
+            selectedCoordinates = { lat: lat, lng: lng };
+            updateCoordinatesDisplay();
+        }
+
+        // Función para actualizar el texto de coordenadas
+        function updateCoordinatesDisplay() {
+            const display = document.getElementById('coordinatesDisplay');
+            
+            if (selectedCoordinates) {
+                display.innerHTML = `📍 <strong>Ubicación seleccionada:</strong> ${selectedCoordinates.lat.toFixed(6)}, ${selectedCoordinates.lng.toFixed(6)}`;
+                display.classList.remove('empty');
+            } else {
+                display.innerHTML = 'Ubicación seleccionada: Sin seleccionar';
+                display.classList.add('empty');
+            }
+        }
+
+        // Manejar clicks en el mapa
+        map.on('click', function(e) {
+            const lat = e.latlng.lat;
+            const lng = e.latlng.lng;
+            updateSelectedMarker(lat, lng);
+        });
+
+        // Función para agregar un círculo permanente al reporte
+        function addReportCircle(report, reportId) {
+            const circle = createReportCircle(report.latitud, report.longitud, report.gravedad, report.tamaño);
+            circle.addTo(map);
+
+            const popupContent = `
+                <b>🚧 Reporte de Hueco</b><br>
+                <strong>Gravedad:</strong> ${report.gravedad.toUpperCase()}<br>
+                <strong>Tamaño:</strong> ${report.tamaño}<br>
+                <strong>Fecha:</strong> ${report.fecha}
+            `;
+
+            circle.bindPopup(popupContent);
+            reportMarkers[reportId] = circle;
+        }
+
+        // Función para renderizar las tarjetas de reportes
+        function renderReports() {
+            const reportsList = document.getElementById('reportsList');
+            const reportsSection = document.getElementById('reportsSection');
+            const emptyReports = document.getElementById('emptyReports');
+            const reportsCounter = document.getElementById('reportsCounter');
+
+            if (reports.length === 0) {
+                reportsList.innerHTML = '';
+                reportsSection.style.display = 'none';
+                emptyReports.style.display = 'block';
+                return;
+            }
+
+            reportsSection.style.display = 'block';
+            emptyReports.style.display = 'none';
+            reportsCounter.textContent = reports.length;
+
+            reportsList.innerHTML = reports.map((report, index) => `
+                <div class="report-card">
+                    <div class="report-header">
+                        <span class="severity-badge severity-${report.gravedad}">${report.gravedad.toUpperCase()}</span>
+                        <span class="report-date">${report.fecha}</span>
+                    </div>
+                    
+                    <div class="report-detail">
+                        <span class="report-detail-label">Gravedad:</span>
+                        <span class="report-detail-value">${report.gravedad}</span>
+                    </div>
+                    
+                    <div class="report-detail">
+                        <span class="report-detail-label">Tamaño:</span>
+                        <span class="report-detail-value">${report.tamaño}</span>
+                    </div>
+                    
+                    <div class="report-description">
+                        <strong>Descripción:</strong><br>${report.descripción}
+                    </div>
+                    
+                    <div class="report-coordinates">
+                        📍 ${report.latitud.toFixed(6)}, ${report.longitud.toFixed(6)}
+                    </div>
+
+                    <div style="margin-top: 12px;">
+                        <button class="delete-report-btn" onclick="deleteReport(${index})">🗑️ Eliminar</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Función para eliminar un reporte
+        function deleteReport(index) {
+            if (confirm('¿Estás seguro de que deseas eliminar este reporte?')) {
+                const report = reports[index];
+                
+                // Eliminar círculo del mapa
+                if (reportMarkers[index]) {
+                    map.removeLayer(reportMarkers[index]);
+                    delete reportMarkers[index];
+                }
+
+                // Eliminar reporte
+                reports.splice(index, 1);
+                renderReports();
+                updateStatistics();
+                
+                // Actualizar localStorage
+                localStorage.setItem('huecos_reports', JSON.stringify(reports));
+            }
+        }
+
+        // Manejar el envío del formulario
+        const form = document.getElementById('reportForm');
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const severity = document.getElementById('severity').value;
+            const size = document.getElementById('size').value;
+            const description = document.getElementById('description').value;
+
+            if (!severity || !size || !description.trim()) {
+                errorMessage.style.display = 'block';
+                successMessage.style.display = 'none';
+                setTimeout(() => {
+                    errorMessage.style.display = 'none';
+                }, 4000);
+                return;
+            }
+
+            const lat = selectedCoordinates ? selectedCoordinates.lat : 5.8268;
+            const lng = selectedCoordinates ? selectedCoordinates.lng : -73.0333;
+
+            const reportData = {
+                gravedad: severity,
+                tamaño: size,
+                descripción: description,
+                fecha: new Date().toLocaleString('es-CO'),
+                latitud: lat,
+                longitud: lng
+            };
+
+            // Agregar a la lista de reportes
+            const reportId = reports.length;
+            reports.push(reportData);
+
+            // Agregar círculo permanente al mapa
+            addReportCircle(reportData, reportId);
+
+            // Guardar en localStorage
+            localStorage.setItem('huecos_reports', JSON.stringify(reports));
+
+            // Mostrar mensaje de éxito
+            successMessage.style.display = 'block';
+            errorMessage.style.display = 'none';
+
+            // Renderizar tarjetas y actualizar estadísticas
+            renderReports();
+            updateStatistics();
+
+            // Limpiar formulario
+            form.reset();
+            
+            // Limpiar marcador seleccionado
+            if (selectedMarker) {
+                map.removeLayer(selectedMarker);
+                selectedMarker = null;
+            }
+            selectedCoordinates = null;
+            updateCoordinatesDisplay();
+
+            // Ocultar mensaje después de 4 segundos
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 4000);
+
+            console.log('Reporte registrado:', reportData);
+            console.log('Total de reportes:', reports.length);
+        });
+
+        // Cargar reportes guardados del localStorage
+        function loadReports() {
+            const savedReports = localStorage.getItem('huecos_reports');
+            if (savedReports) {
+                reports = JSON.parse(savedReports);
+                reports.forEach((report, index) => {
+                    addReportCircle(report, index);
+                });
+                renderReports();
+                updateStatistics();
+            }
+        }
+
+        // Inicializar
+        updateCoordinatesDisplay();
+        updateStatistics();
+        loadReports();
+    </script>
+</body>
+</html>
