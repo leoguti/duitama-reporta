@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alerta Ciudadana</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body { background-color: #121212; color: #ffffff; margin: 0; }
+        h1 { color: #ff4444; }
+        #map { height: 400px; }
+        .form-container { margin: 20px; }
+        .form-container select, .form-container textarea { width: 100%; padding: 10px; margin: 10px 0; }
+        .coords { font-size: 1.2em; margin: 10px 0; }
+        button { background-color: #ff4444; color: #ffffff; border: none; padding: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Alerta Ciudadana</h1>
+    <div id="map"></div>
+    <div class="coords">Punto seleccionado: <span id="coordinates"></span></div>
+    <div class="form-container">
+        <form id="alertForm">
+            <select id="problemType">
+                <option value="">Seleccionar tipo de problema</option>
+                <option value="Basurero ilegal">Basurero ilegal</option>
+                <option value="Zona oscura">Zona oscura</option>
+                <option value="Accidente con carrilera">Accidente con carrilera</option>
+                <option value="Robo o atraco">Robo o atraco</option>
+                <option value="Pelea o conflicto">Pelea o conflicto</option>
+                <option value="Otro">Otro</option>
+            </select>
+            <textarea id="description" placeholder="Descripción del problema"></textarea>
+            <select id="timeApprox">
+                <option value="">Seleccionar hora aproximada</option>
+                <option value="Mañana">Mañana</option>
+                <option value="Tarde">Tarde</option>
+                <option value="Noche">Noche</option>
+                <option value="No sé">No sé</option>
+            </select>
+            <button type="submit">Enviar Alerta</button>
+        </form>
+    </div>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        var map = L.map('map').setView([5.8268, -73.0333], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+        var marker;
+
+        map.on('click', function(e) {
+            if (marker) {
+                map.removeLayer(marker);
+            }
+            marker = L.marker(e.latlng).addTo(map);
+            document.getElementById('coordinates').innerText = e.latlng.lat.toFixed(4) + ', ' + e.latlng.lng.toFixed(4);
+        });
+
+        document.getElementById('alertForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            // Handle form submission logic here.
+            alert('Alerta enviada!');
+        });
+    </script>
+</body>
+</html>
