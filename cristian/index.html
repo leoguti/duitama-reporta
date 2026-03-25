@@ -762,3 +762,46 @@
     </script>
 </body>
 </html>
+// Suponiendo que ya tienes tus variables de coordenadas (latitud, longitud) 
+// y el objeto del mapa Leaflet inicializados arriba.
+
+const reportForm = document.getElementById('reportForm');
+const scriptURL = 'https://script.google.com/macros/s/AKfycbyf0-pOvEN3GlOldM9aL8aWIUrXXbCv-EDgl8xDHQWvbTZLn0Eyoe6tQapNFQSw6fVI7A/exec';
+
+reportForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    // 1. Recolectar los datos de los inputs y las coordenadas actuales del marcador
+    // Nota: Asegúrate de tener las variables 'lat' y 'lng' actualizadas cuando el usuario mueve el marcador
+    const reportData = {
+        tipo: document.getElementById('problemType').value,
+        descripcion: document.getElementById('description').value,
+        lat: lat, // Variable donde guardas la latitud del marcador
+        lng: lng  // Variable donde guardas la longitud del marcador
+    };
+
+    try {
+        // 2. Realizar el envío POST
+        const response = await fetch(scriptURL, {
+            method: 'POST',
+            mode: 'no-cors', // Google Apps Script suele requerir no-cors si no hay headers específicos
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(reportData)
+        });
+
+        // 3. Manejo de éxito
+        // Nota: Con 'no-cors' no podemos leer el cuerpo de la respuesta, 
+        // pero si no salta al catch, asumimos que se envió correctamente.
+        alert('¡Reporte enviado con éxito!');
+        reportForm.reset();
+        
+        // Aquí puedes añadir la lógica que ya tenías para limpiar el marcador o refrescar el mapa
+
+    } catch (error) {
+        // 4. Manejo de error
+        console.error('Error en el envío:', error);
+        alert('Error al enviar el reporte. Intenta de nuevo.');
+    }
+});
