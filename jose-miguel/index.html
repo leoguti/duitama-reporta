@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puntos Peligrosos - Carrera 20, Duitama</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            background-color: #000;
+            color: #f00;
+        }
+        #map {
+            height: 100%;
+            width: 50%;
+        }
+        .form-container {
+            padding: 20px;
+            width: 50%;
+        }
+        h1 {
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+        select, textarea, button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #f00;
+            border-radius: 5px;
+            background-color: #333;
+            color: #fff;
+        }
+        button {
+            cursor: pointer;
+            background-color: #f00;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div class="form-container">
+        <h1>Reportar Puntos Peligrosos</h1>
+        <form>
+            <label for="problem-type">Tipo de Problema:</label>
+            <select id="problem-type">
+                <option value="">Seleccione...</option>
+                <option value="robo">Robo</option>
+                <option value="violencia">Violencia</option>
+                <option value="vandalismo">Vandalismo</option>
+                <option value="otro">Otro</option>
+            </select>
+            <label for="description">Descripción:</label>
+            <textarea id="description" rows="4"></textarea>
+            <label for="time">Hora:</label>
+            <select id="time">
+                <option value="">Seleccione...</option>
+                <option value="01:00">01:00</option>
+                <option value="02:00">02:00</option>
+                <option value="03:00">03:00</option>
+                <option value="04:00">04:00</option>
+                <option value="05:00">05:00</option>
+                <option value="06:00">06:00</option>
+                <option value="07:00">07:00</option>
+                <option value="08:00">08:00</option>
+                <option value="09:00">09:00</option>
+                <option value="10:00">10:00</option>
+                <option value="11:00">11:00</option>
+                <option value="12:00">12:00</option>
+                <option value="13:00">13:00</option>
+                <option value="14:00">14:00</option>
+                <option value="15:00">15:00</option>
+                <option value="16:00">16:00</option>
+                <option value="17:00">17:00</option>
+                <option value="18:00">18:00</option>
+                <option value="19:00">19:00</option>
+                <option value="20:00">20:00</option>
+                <option value="21:00">21:00</option>
+                <option value="22:00">22:00</option>
+ 
+                <option value="23:00">23:00</option>
+                <option value="00:00">00:00</option>
+            </select>
+            <button type="submit">Reportar</button>
+        </form>
+    </div>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        var map = L.map('map').setView([5.8268, -73.0333], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+    </script>
+</body>
+</html>
